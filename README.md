@@ -1,0 +1,4 @@
+VIS
+===
+
+Visualisation course
