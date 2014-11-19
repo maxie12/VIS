@@ -14,6 +14,7 @@
   duration = 500,
   grouped = false;
 
+    var cityData = d3.map();
 	menRow.each(function() {
 		d3.select(this).selectAll("td").each(function() { 
 			menArray.push(parseInt(d3.select(this).text()));
@@ -169,3 +170,23 @@ var transitionStacked = function() {
 		.duration(duration)
 		.attr("width", w / dataset[0].length - barPadding );
 };
+
+queue()
+  .defer(d3.json, "cities-geometry.json")
+   .defer(d3.tsv, "cities-data.txt")/*, function(d) { 
+        cityData.set(d.Code, [d.Naam, d.P_00_14_JR, d.P_15_24_JR, d.P_25_44_JR, d.P_45_64_JR, d.P_65_EO_JR]); 
+        console.log(cityData.get(d.Code));
+    })*/
+   .await(dataLoaded);
+
+function dataLoaded(error, mapData, newCityData) {
+    console.log(cityData);
+    //console.log(newCityData);
+    newCityData.forEach(function(v,k){
+        
+        cityData.set(v.Code, [v.Naam, v.P_00_14_JR, v.P_15_24_JR, v.P_25_44_JR, v.P_45_64_JR, v.P_65_EO_JR]);
+    });
+    //var maxValue = d3.max(cityData.values());
+    //console.log("The maximum value is " + maxValue);
+    console.log(cityData.size());
+}
