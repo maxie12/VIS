@@ -1,20 +1,18 @@
-	var dataset  = [],
-	menArray  = [], 
-	womenArray = [],
-	menObjectArray = [],
-	womenObjectArray = [],
-	stack = d3.layout.stack(),
-  menRow = d3.selectAll("tr.men"),
-	womenRow = d3.selectAll("tr.women"),
+var dataset  = [],
+	activatedColumns = [],
 	/*Width and height*/
 	w = 630,
 	h = 200,
 	barPadding = 5,
-	padding = 60
-  duration = 500,
-  grouped = false;
+	padding = 60,
+    duration = 500,
+    grouped = false;
 
-	menRow.each(function() {
+var yScale, svg, groups;
+var stack = d3.layout.stack();
+var cityData = d3.map();
+var colors = ["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"];
+	/*menRow.each(function() {
 		d3.select(this).selectAll("td").each(function() { 
 			menArray.push(parseInt(d3.select(this).text()));
 		})
@@ -42,40 +40,78 @@
 
 	dataset.push(menObjectArray);
 	dataset.push(womenObjectArray);
+*/
+function draw() {
+    dataset  = [];
+    stack = d3.layout.stack();
+    var elements = document.getElementsByTagName("svg");
+    for (var ix = 0; ix < elements.length; ix++) {
+        elements[ix].parentNode.removeChild(elements[ix]);
+    }
+    
+    var rray0 = [], rray15 = [], rray25 = [], rray45 = [], rray65 = [];
+    for (var i = 0; i < activatedColumns.length; i++) {
+        var newObject0 = {}, newObject15 = {}, newObject25 = {}, newObject45 = {}, newObject65 = {};        
+        newObject0.x=i;
+        newObject15.x=i;
+        newObject25.x=i;
+        newObject45.x=i;
+        newObject65.x=i;
+        
+        newObject0.y=parseInt(cityData.get(activatedColumns[i])[1]);
+        newObject15.y=parseInt(cityData.get(activatedColumns[i])[2]);
+        newObject25.y=parseInt(cityData.get(activatedColumns[i])[3]);
+        newObject45.y=parseInt(cityData.get(activatedColumns[i])[4]);
+        newObject65.y=parseInt(cityData.get(activatedColumns[i])[5]);
+        
+        rray0.push(newObject0);
+        rray15.push(newObject15);
+        rray25.push(newObject25);
+        rray45.push(newObject45);
+        rray65.push(newObject65);
+    }
+    dataset.push(rray0);
+    dataset.push(rray15);
+    dataset.push(rray25);
+    dataset.push(rray45);
+    dataset.push(rray65);
 
 	stack(dataset);
 
 	/* Define Y scale */
-	var yScale = d3.scale.linear()
+	 yScale = d3.scale.linear()
 		.domain([0,				
 			d3.max(dataset, function(d) {
 				return d3.max(d, function(d) {
-					return d.y0 + d.y;
+					return parseInt(d.y0) + parseInt(d.y);
 				});
 			})
 		])
 		.range([h, padding]);	
 
 	/* Create SVG element */
-	var svg = d3.select(".info-chart")
+	svg = d3.select(".info-chart")
 		.append("svg")
 		.attr("width", w)
 		.attr("height", h);
 
 	/* Add a group for each row of data */
-	var groups = svg.selectAll("g")
+	groups = svg.selectAll("g")
 		.data(dataset)
 		.enter()
 		.append("g")
 		.style("fill", function(d, i) {
-			return	i === 0 ? "#E53524" : "#F8B436"; 
+			return	colors[i]; 
 		});		
 
 	groups.selectAll("rect")
-		.data(function(d) { return d; })
+		.data(function(d) {
+            //console.log(d);
+            return d; })
 		.enter()
 		.append("rect")
 		.attr("x", function(d, i){
+        console.log(d);
 			return i * (w / dataset[0].length); 
 		})
 		.attr("y", function(d){
@@ -86,10 +122,10 @@
 			return h - yScale(d.y);
 		})
 		.on("mouseover", function(d) {
-
+            console.log(d);
 			/* Get this bar's x/y values, then augment for the tooltip */
 			var xPosition,
-			yPosition = parseInt(d3.select(this).attr("y") );
+			yPosition = parseInt(d3.select(this).attr("y"));
 
 			if (d3.select(this).attr("x") < 350) {
 
@@ -121,7 +157,7 @@
 				/* Hide the tooltip */
 				d3.select(".tooltip").classed("hidden", true);			
 			});
-
+}
 d3.selectAll("input").on("change", change);		
 
 function change() {
@@ -139,11 +175,11 @@ var transitionGrouped = function() {
 		.transition()
 		.duration(duration)
     .delay(function(d, i) { return i / dataset[0].length * duration; })
-		.attr("width", (w / dataset[0].length - barPadding) / 2 )
+		.attr("width", (w / dataset[0].length - barPadding) / 5 )
 		.transition()
 		.duration(duration)
 		.attr("x", function(d, i, j){
-			return i * (w / dataset[0].length) + ((w / dataset[0].length - barPadding)/2) * j ; 
+			return i * (w / dataset[0].length) + ((w / dataset[0].length - barPadding)/5) * j ; 
 		})
 		.transition()
     .duration(duration)
@@ -169,3 +205,50 @@ var transitionStacked = function() {
 		.duration(duration)
 		.attr("width", w / dataset[0].length - barPadding );
 };
+
+queue()
+  .defer(d3.json, "cities-geometry.json")
+   .defer(d3.tsv, "cities-data.txt")
+   .await(dataLoaded);
+
+function dataLoaded(error, mapData, newCityData) {
+    console.log(cityData);
+    //console.log(newCityData);
+    newCityData.forEach(function(v,k){
+        
+        cityData.set(v.Code, [v.Naam, v.P_00_14_JR, v.P_15_24_JR, v.P_25_44_JR, v.P_45_64_JR, v.P_65_EO_JR]);
+    });
+        console.log(cityData.size());
+}
+
+    function addColumn(code) {
+      if(!cityData.has(code)) {
+        console.log(code + " is not in the cityData, unable to add column");   
+      }
+    else if(activatedColumns.indexOf(code) > -1) {
+       console.log('is al toegevoegd');
+    }
+    else {
+        activatedColumns.push(code);
+        draw();
+    }
+    }
+    function removeColumn(code) {
+    if(activatedColumns.indexOf(code) <= -1) {
+       console.log(code + " is not activated");
+       
+    }
+else {
+    var index = activatedColumns.indexOf(code);
+    if (index > -1) {
+        activatedColumns.splice(index, 1);
+        draw();
+    }
+    else {
+     console.log('Could not remove ' + code);   
+    }
+}
+    }
+    //var maxValue = d3.max(cityData.values());
+    //console.log("The maximum value is " + maxValue);
+
