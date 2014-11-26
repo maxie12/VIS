@@ -1,7 +1,13 @@
 
 <!DOCTYPE html>
 <html>
-
+<style>
+    path {
+        stroke: grey;
+        stroke-width: 1px;
+        fill: white;
+    }
+</style>
 <head>
 
   <meta charset="UTF-8">
@@ -27,11 +33,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       window.ontouchstart = function(){};
     }
   </script>
+    
+  <script src='jquery.js'></script>
+  <script src='d3.js'></script>
+  <script src='d3.queue.js'></script>
+  <script src='topojson.v1.min.js'></script>
 
 </head>
 
 <body>
+  <div id="container">
 
+        <div id="wtf">
+            <h2>Geselecteerde gemeente</h2>
+        </div>
+        <div id="selectedGemeentesUitleg">
+            <h2> Selecteer op de kaart de provincies waarin u geïnteressert bent</h2>
+        </div>
+
+        <div id="selectedGemeentes">
+            <table>
+                <tr><td></td></tr>
+            </table>
+
+        </div>
+    </div>
+<div id="chart">
   <form>
     <label><input type="radio" name="mode" id="stacked" value="stacked" checked> Stacked</label>
   <label><input type="radio" name="mode" id="grouped" value="grouped"> Grouped</label>
@@ -39,14 +66,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 <div class="info-chart">
   <div class="tooltip hidden">
-		<p><span class="value">100</span> thousand</p>
+        <p><span class="name"></span></p>
+		<p><span class="value">100</span>%</p>
+        <p><span class="persons"></span> persons</p>
 	</div>
 </div>
+    </div>
+    
+    <div style="clear:both"></div>
+    
+  
 
-
-  <script src='jquery.js'></script>
-  <script src='d3.js'></script>
-  <script src='d3.queue.js'></script>
 
   <script>
     if (document.location.search.match(/type=embed/gi)) {
