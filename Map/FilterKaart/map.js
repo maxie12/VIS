@@ -16,17 +16,19 @@ var svg = d3.select("body").append("svg")
         .attr("width", width)
         .attr("height", height);
 
+var minValue = 0;
+var maxValue = 0;
 
 var mapData;
-
-var gemeenteNaam = "Selecteer uw gemeente"
+var gemeenteNaam = "Appingedam";
+var gemeenteCode = "GM0003";
 //[not selected, mouse over and not selected,selected,mouse over and selected]
-var gemeenteColors = ["#F1F1F1", "#CFCFCF", "#5E5E5E", "#BBBBBB"]
+var gemeenteColors = ["#F1F1F1", "#CFCFCF", "#5E5E5E", "#BBBBBB"];
 //last province we clicked on. Becomes null as soon as mouse leaves the gemeente
 var clickedOnGemeente = null;
 
 var filterColors = ["#000000", "#000000", "#000000", "#000000"];//unselected,hover unselected,hover selected,selected
-var currentFilter = "aant_man";
+var currentFilter = "AANT_MAN";
 var filterList = new Array();
 
 // Setup the map projection for a good depiction of The Netherlands. The
@@ -45,14 +47,17 @@ var g = svg.append("g");
 
 queue()
         .defer(d3.json, "cities-geometry.json")
-        .defer(d3.tsv, "cities-data.txt", function(d) {
-            //cityData.set(d.Code, +d.AUTO_TOT);
-        })
+        .defer(d3.tsv, "cities-data.txt")
         .await(dataLoaded);
 
 
-function dataLoaded(error, loadedMapData,cityData) {
+function dataLoaded(error, loadedMapData, newCityData) {
     mapData = loadedMapData;
+
+    newCityData.forEach(function(v, k) {
+        cityData.set(v.Code, v);
+    });
+    console.log(cityData);
     var maxValue = d3.max(cityData.values());
     console.log("The maximum value is " + maxValue);
     linearColorScale.domain([0.0, maxValue]);
@@ -68,10 +73,10 @@ function dataLoaded(error, loadedMapData,cityData) {
             .style("fill", gemeenteColors[0]);
     //initialize for the filter
     console.log(mapData.features[2].properties);
-    console.log(cityData);
-    for (var key in mapData.features[0].properties)
+    console.log(cityData.get("GM0003"));
+    for (var key in cityData.get("GM0003"))
     {
-        if (key !== "WATER" && key !== "gm_code" && key !== "gm_naam")
+        if (key !== "Code" && key !== "Naam" && key !== "GM_CODE" && key != "GM_NAAM" && key != "WATER")
         {
             filterList.push(key);
             d3.select("#filter ").append("p")
@@ -147,15 +152,16 @@ function dataLoaded(error, loadedMapData,cityData) {
     function newFilter()
     {
 
-        var minValue = 999999999;
-        var maxValue = -1;
+        minValue = 999999999;
+        maxValue = -1;
         var average = 0;
         // console.log(currentFilter);
         //   console.log(mapData.features[0].properties[currentFilter]);
-        for (var i = 0; i < mapData.features.length; i++)
+        console.log(cityData.values())
+        for (var i = 0; i < cityData.values().length; i++)
         {
 
-            var value = parseInt(mapData.features[i].properties[currentFilter]);
+            var value = parseFloat(cityData.values()[i][currentFilter]);
             average += value;
             if (value <= -99997.0)
             {
@@ -167,35 +173,94 @@ function dataLoaded(error, loadedMapData,cityData) {
                 maxValue = value > maxValue ? value : maxValue;
             }
         }
+        console.log(minValue);
+
         linearColorScale = d3.scale.linear()
                 .domain([minValue, maxValue])
                 .range([0, 1]);
 
         g.selectAll("path")
                 .transition()
-                .duration(2000)
+                .duration(500)
+                .delay(function(d){
+                            return(1000*(53-d.geometry['coordinates'][0][0][0][1]))})
                 .style("fill", function(d) {
-                    return(colorInterpolator(linearColorScale(d.properties[currentFilter])));
+                    var gemeenteCode = d.properties["gm_code"];
+                    if (!cityData.get(gemeenteCode))
+                    {
+                        return("#E7E7E7");
+                    }
+                    else
+                    {
+                        return(colorInterpolator(linearColorScale(cityData.get(gemeenteCode)[currentFilter])));
+                    }
                 });
 
-        //d3.select('#wtf h2').html("Gemeentenaam: " + d + "<br />" + currentFilter + " : " + d.properties[currentFilter]);//displays the name
 
-    }
-    function contained(province)
-    {
-        var index = gemeenteCodesSelected.indexOf(province);
-        if (index === -1)
+        //missing data
+        if (cityData.get(gemeenteCode))
         {
-            return(false);
+            var value = cityData.get(gemeenteCode)[currentFilter]
+            d3.select('#wtf h2').html("Gemeentenaam: " + gemeenteNaam + "<br />" + currentFilter + " : " + cityData.get(gemeenteCode)[currentFilter]);//displays the name            
         }
-        return(true);
+        else
+        {
+            d3.select('#wtf h2').html("Gemeentenaam: " + gemeenteNaam + "<br />" + currentFilter + " : Er is geen data beschikbaar voor deze gemeente");//displays the name
+        }
+        updateColorScale();
+    }
+
+
+
+    function updateColorScale()
+    {
+        var legend = d3.select("#legend");
+        legend.selectAll("*").remove();
+        for (var i = 0; i < 10; i++)
+        {
+            value = Math.ceil(1000 * (minValue + (maxValue - minValue) / 10 * i)) / 1000;
+            textValue = value;
+            if (currentFilter.substring(0,1) === "P")
+            {
+                textValue += " %";
+            }
+            else
+            {
+                textValue = value;
+            }
+
+
+            legend.append("div")
+                    .style("width", "90px")
+                    .style("background-color", (colorInterpolator(linearColorScale(value))))
+                    .append("div")
+                    .style("width", "85px")
+                    .style("text-align", "right")
+                    .append("text")
+
+
+                    .text(textValue);
+        }
     }
 
     function mouseEnterGemeente(d)
     {
 
         gemeenteNaam = d.gm_naam;
-        d3.select('#wtf h2').html("Gemeentenaam: " + d.gm_naam + "<br />" + currentFilter + " : " + d.properties[currentFilter]);//displays the name
+        gemeenteCode = d.gm_code;
+        //missing data
+
+        if (cityData.get(gemeenteCode))
+        {
+            var value = cityData.get(gemeenteCode)[currentFilter]
+            d3.select('#wtf h2').html("Gemeentenaam: " + gemeenteNaam + "<br />" + currentFilter + " : " + value);//displays the name            
+        }
+        else
+        {
+            d3.select('#wtf h2').html("Gemeentenaam: " + gemeenteNaam + "<br />" + currentFilter + " : Er is geen data beschikbaar voor deze gemeente");//displays the name
+        }
+
+
     }
 
 
