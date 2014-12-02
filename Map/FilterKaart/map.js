@@ -12,9 +12,15 @@ var linearColorScale = d3.scale.linear()
 
 var colorInterpolator = d3.interpolateHsl("green", "red");
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select("#map").append("svg")
         .attr("width", width)
         .attr("height", height);
+
+// Define 'div' for tooltips
+var toolTipdiv = d3.select("#map")
+        .append("div")  // declare the tooltip div 
+        .attr("class", "tooltip")              // apply the 'tooltip' class
+        .style("opacity", 0);                  // set the opacity to nil
 
 var minValue = 0;
 var maxValue = 0;
@@ -22,10 +28,6 @@ var maxValue = 0;
 var mapData;
 var gemeenteNaam = "Appingedam";
 var gemeenteCode = "GM0003";
-//[not selected, mouse over and not selected,selected,mouse over and selected]
-var gemeenteColors = ["#F1F1F1", "#CFCFCF", "#5E5E5E", "#BBBBBB"];
-//last province we clicked on. Becomes null as soon as mouse leaves the gemeente
-var clickedOnGemeente = null;
 
 var filterColors = ["#000000", "#000000", "#000000", "#000000"];//unselected,hover unselected,hover selected,selected
 var currentFilter = "AANT_MAN";
@@ -69,103 +71,69 @@ function dataLoaded(error, loadedMapData, newCityData) {
             .attr('id', function(d) {
                 return d.gm_code;
             })
-            .on("mouseenter", mouseEnterGemeente)
-            .style("fill", gemeenteColors[0]);
+            .on("mouseover", mouseEnterGemeente)
+            .on("mouseout", function(d) {
+                //color the province
+                d3.select(this).style("opacity", 1);
+                //out trigger before over, thus opacity to 0 if we change place
+                toolTipdiv.transition()
+                        .duration(800)
+                        .style("opacity", 0);
+
+            })
+
+
     //initialize for the filter
-    console.log(mapData.features[2].properties);
-    console.log(cityData.get("GM0003"));
+
+
+
     for (var key in cityData.get("GM0003"))
     {
         if (key !== "Code" && key !== "Naam" && key !== "GM_CODE" && key != "GM_NAAM" && key != "WATER")
         {
             filterList.push(key);
-            d3.select("#filter ").append("p")
-                    .attr("id", key)
-                    .text(key)
-                    .style("Margin-top", '0px')
-                    .style("Margin-bottom", '0px')
-                    .on("mouseout", filterExit)
-                    .on("mouseenter", filterEnter)
-                    .on("click", filterClick);
         }
     }
+
+    //make the dropdown menu
+    var filter = d3.select("#filter");
+    var select = filter.append("select")
+            .on("change", change);
+    options = select.selectAll("option").data(filterList);//add the data
+    options.enter().append("option").text(function(d) {
+        return d;
+    });//add buttons by data
+    //initialize the map
     newFilter();
 
-
-    function filterClick()
+    //on change of the drop down
+    function change()
     {
-        /*
-         * Using [0][0] as 
-         * console.log(d3.select("#filter h4#" + currentFilter));; gives Array [ Array[1] ]
-         * console.log(d3.selectAll("#filter h4#" + currentFilter));; gives Array [ Array[1]]
-         * console.log(d3.selectAll("#filter h4#" + currentFilter)[0][0].id);; gives Array [ Array[1]]
-         * No idea why
-         */
-        //select it and unhighlight the previous selected
-        d3.select("#filter p#" + currentFilter).style("font-weight", "normal");
-        d3.select(this).style("font-weight", 'bold');
+        var selectedIndex = select.property('selectedIndex');
 
-        currentFilter = d3.select(this)[0][0].id;
+        currentFilter = options[0][selectedIndex].__data__;
+
+
         newFilter();
+        console.log(currentFilter);
     }
-    function filterEnter()
-    {
-        /*
-         * Using [0][0] as 
-         * console.log(d3.select(this)); gives Array [ Array[1] ]
-         * console.log(d3.selectAll(this)); gives Array [ Array[0] ]
-         * console.log(d3.select(this)[0][0].id); gives "p_65_eo_jr"
-         * 
-         * No idea why
-         */
-        //if tthis is not the currentfilter
-        if (currentFilter !== d3.select(this)[0][0].id)
-        {
-            d3.select(this).style("font-weight", "bold");
 
-        }
-        else
-        {
-            d3.select(this).style("font-weight", "normal");
-        }
-    }
-    function filterExit() {
-        /*
-         * Using [0][0] as 
-         * console.log(d3.select(this)); gives Array [ Array[1] ]
-         * console.log(d3.selectAll(this)); gives Array [ Array[0] ]
-         * console.log(d3.select(this)[0][0].id); gives "p_65_eo_jr"
-         * 
-         * No idea why
-         */
-        //if it was not selected
-        if (currentFilter !== d3.select(this)[0][0].id)
-        {
-            d3.select(this).style("font-weight", "normal");
-        }
-        else
-        {
-            d3.select(this).style("font-weight", "bold");
-        }
-    }
 
     function newFilter()
     {
-
         minValue = 999999999;
         maxValue = -1;
         var average = 0;
-        // console.log(currentFilter);
-        //   console.log(mapData.features[0].properties[currentFilter]);
+
         console.log(cityData.values())
         for (var i = 0; i < cityData.values().length; i++)
         {
 
             var value = parseFloat(cityData.values()[i][currentFilter]);
             average += value;
-            if (value <= -99997.0)
+            if (value <= -1)
             {
-
+                //do nothing, data is invalid
             }
             else
             {
@@ -181,9 +149,10 @@ function dataLoaded(error, loadedMapData, newCityData) {
 
         g.selectAll("path")
                 .transition()
-                .duration(500)
-                .delay(function(d){
-                            return(1000*(53-d.geometry['coordinates'][0][0][0][1]))})
+                .duration(700)
+                .delay(function(d) {
+                    return(50 * (53 - d.geometry['coordinates'][0][0][0][1]))
+                })
                 .style("fill", function(d) {
                     var gemeenteCode = d.properties["gm_code"];
                     if (!cityData.get(gemeenteCode))
@@ -216,11 +185,11 @@ function dataLoaded(error, loadedMapData, newCityData) {
     {
         var legend = d3.select("#legend");
         legend.selectAll("*").remove();
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < 11; i++)
         {
-            value = Math.ceil(1000 * (minValue + (maxValue - minValue) / 10 * i)) / 1000;
+            value = Math.ceil(100 * (minValue + (maxValue - minValue) / 10 * i)) / 100;
             textValue = value;
-            if (currentFilter.substring(0,1) === "P")
+            if (currentFilter.substring(0, 1) === "P")
             {
                 textValue += " %";
             }
@@ -235,96 +204,46 @@ function dataLoaded(error, loadedMapData, newCityData) {
                     .style("background-color", (colorInterpolator(linearColorScale(value))))
                     .append("div")
                     .style("width", "85px")
+                    .style("height", "45px")
                     .style("text-align", "right")
                     .append("text")
-
-
-                    .text(textValue);
+                    .text(textValue)
+                    .style("padding-top", "40px");
         }
     }
 
     function mouseEnterGemeente(d)
     {
-
         gemeenteNaam = d.gm_naam;
         gemeenteCode = d.gm_code;
         //missing data
-
+        var text = "";
         if (cityData.get(gemeenteCode))
         {
             var value = cityData.get(gemeenteCode)[currentFilter]
-            d3.select('#wtf h2').html("Gemeentenaam: " + gemeenteNaam + "<br />" + currentFilter + " : " + value);//displays the name            
-        }
-        else
-        {
-            d3.select('#wtf h2').html("Gemeentenaam: " + gemeenteNaam + "<br />" + currentFilter + " : Er is geen data beschikbaar voor deze gemeente");//displays the name
-        }
-
-
-    }
-
-
-
-
-    function addGemeente(gemeenteNaam, gemeenteCode) {
-        gemeenteCodesSelected.push(gemeenteCode);
-        gemeenteNamenSelected.push(gemeenteNaam);
-
-        updateSelected();
-    }
-
-    function removeGemeente(gemeenteNaam, gemeenteCode)
-    {
-        var index = gemeenteCodesSelected.indexOf(gemeenteCode);
-        gemeenteCodesSelected.splice(index, 1);
-
-        var index = gemeenteNamenSelected.indexOf(gemeenteNaam);
-        gemeenteNamenSelected.splice(index, 1);
-
-        updateSelected();
-    }
-    function updateSelected() {
-        d3.select("#selectedGemeentes").select("table").selectAll("*").remove();
-        d3.select("#selectedGemeentesUitleg").selectAll("h2").remove();
-        if (gemeenteNamenSelected.length === 0)
-        {
-            d3.select("#selectedGemeentesUitleg").append("h2")
-                    .text("Selecteer op de kaart de provincies waarin u geinteresser bent")
-        }
-        else
-        {
-            d3.select("#selectedGemeentesUitleg").append("h2")
-                    .text("Uw geselecteerde provincies")
-
-        }
-        for (i = 0; i < gemeenteNamenSelected.length; i++)
-        {
-            var tr = d3.select("#selectedGemeentes").select("table").append("tr");
-            tr.append("td").text(gemeenteNamenSelected[i]);
-            tr.append("button")
-                    .attr("gemeenteNaam", gemeenteNamenSelected[i])
-                    .text("Haal deze gemeente weg")
-                    .on("click", function() {
-                        var naam = this.getAttribute("gemeenteNaam");
-                        var code = nameToCode(naam);
-//                    unmark the province on the map
-//                    find the code so we cna unmark it on the map
-                        removeGemeente(naam, code);
-
-                        d3.selectAll("path#" + code).style("fill", gemeenteColors[0]);
-                    });
-        }
-    }
-    function nameToCode(name)
-    {
-        console.log("init: " + name)
-        for (var i = 0; i < mapData.features.length; i++)
-        {
-            if (mapData.features[i].gm_naam === name)
+            if (value < 0)//negative value
             {
-                return(mapData.features[i].gm_code);
+                value = "Er is geen data beschikbaar voor deze gemeente";
             }
+            if (currentFilter.substring(0, 1) === "P")
+            {
+                value += "%";
+            }
+            text = "Gemeentenaam: " + gemeenteNaam + "<br />" + currentFilter + " : " + value;//displays the name            
         }
-        return(null);
+        else
+        {
+            text = "Gemeentenaam: " + gemeenteNaam + "<br />" + currentFilter + " : Er is geen data beschikbaar voor deze gemeente";//displays the name
+        }
+
+        toolTipdiv.transition()
+                .duration(200)
+                .style("opacity", .9);
+        toolTipdiv.html(text)
+                .style("left", (d3.event.pageX + 10) + "px")
+                .style("top", (d3.event.pageY - 80) + "px");
+        d3.select(this).style("opacity", 0.6);
+
     }
+
 }
