@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html class="ocks-org do-not-copy">
+<meta charset="utf-8">
+<title>The Wealth & Health of Nations</title>
+<style>
+    @import url("style.css");
+    #chart {
+        margin-left: -40px;
+        height: 506px;
+    }
+    text {
+        font: 10px sans-serif;
+    }
+    .dot {
+        stroke: #000;
+    }
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+    .label {
+        fill: #777;
+    }
+    .year.label {
+        font: 500 196px"Helvetica Neue";
+        fill: #ddd;
+    }
+    .year.label.active {
+        fill: #aaa;
+    }
+    .overlay {
+        fill: none;
+        pointer-events: all;
+        cursor: ew-resize;
+    }
+</style>
+
+
+<p id="chart"></p>
+
+
+
+<script src="d3.js"></script>
+<script src="d3.queue.js"></script>
+
+<script>
+    // Various accessors that specify the four dimensions of data to visualize.
+    function x(d) {
+        return parseInt(d.nof)*100/parseInt(d.nom);
+    }
+
+    function y(d) {
+        return parseInt(d.noe)*parseInt(d.doelgroep)/100;
+    }
+
+    function radius(d) {
+    
+        return 275*parseInt(d.noe);
+    }
+
+    function color(d) {
+        return d.noe;
+    }
+
+    function key(d) {
+        return d.name;
+    }
+    // Chart dimensions.
+    var margin = {
+            top: 19.5,
+            right: 19.5,
+            bottom: 19.5,
+            left: 39.5
+        },
+        width = 1300 - margin.right,
+        height = 800 - margin.top - margin.bottom;
+    // Various scales. These domains make assumptions of data, naturally.
+    var xScale = d3.scale.linear().domain([1, 40]).range([0, width]),
+        //yScale = d3.scale.linear().domain([30, 34395]).range([height, 0]),
+        yScale = d3.scale.log().domain([1600, 500000]).range([height, 0]),
+        radiusScale = d3.scale.sqrt().domain([0, 5e8]).range([0, 40]),
+        colorScale = d3.scale.category20();
+    // The x & y axes.
+    var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
+        yAxis = d3.svg.axis().scale(yScale).orient("left");
+    var cityData = d3.map();
+    // Create the SVG container and set the origin.
+    var svg = d3.select("#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Add the x-axis.
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+    // Add the y-axis.
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+    // Add an x-axis label.
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "end")
+        .attr("x", width)
+        .attr("y", height - 6)
+        .text("Fraction Company cars (%)");
+    // Add a y-axis label.
+    svg.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "end")
+        .attr("y", 6)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("Number of inhabitants between 25 and 65");
+
+
+    queue()
+        .defer(d3.tsv, "cities-data.txt")
+        .await(dataLoaded);
+
+    function dataLoaded(error, newCityData) {
+        console.log(newCityData);
+        //console.log(newCityData);
+        var bisect = d3.bisector(function (d) {
+            return d[0];
+        });
+        var dot = svg.append("g")
+            .attr("class", "dots")
+            .selectAll(".dot")
+            .data(returnData())
+            .enter().append("circle")
+            .attr("class", "dot")
+            .style("fill", function (d) {
+                return colorScale(color(d));
+            })
+            .call(position)
+            .sort(order);
+
+        function returnData() {
+            return newCityData.map(function (d) {
+                return {
+                    name: d.Naam,
+                    nom: d.AUTO_TOT,
+                    nof: d.BEDR_AUTO,
+                    noe: d.AANT_INW,
+                    doelgroep : parseInt(d.P_25_44_JR)+parseInt(d.P_45_64_JR)
+                }
+            });
+        }
+
+        function position(dot) {
+            dot.attr("cx", function (d) {
+                return xScale(x(d));
+            })
+                .attr("cy", function (d) {
+                    return yScale(y(d));
+                })
+                .attr("r", function (d) {
+                    return radiusScale(radius(d));
+                });
+        }
+
+        // Defines a sort order so that the smallest dots are drawn on top.
+        function order(a, b) {
+            return radius(b) - radius(a);
+        }
+        dot.append("title")
+            .text(function (d) {
+                return d.name;
+            });
+
+
+        console.log(cityData.size());
+
+    }
+</script>
