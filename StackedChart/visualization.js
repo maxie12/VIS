@@ -2,7 +2,7 @@ var dataset = [],
     activatedColumns = [],
     /*Width and height*/
     w = 630,
-    h = 200,
+    h = 300,
     barPadding = 5,
     padding = 60,
     duration = 500,
@@ -16,7 +16,7 @@ var labels = ["Personen tussen 0 en 14 jaar oud", "Personen tussen 15 en 24 jaar
 var yScale, svg, groups;
 var stack = d3.layout.stack();
 var cityData = d3.map();
-var colors = ["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"];
+var colors = ["#56524a", "#f2e1bc", "#e9c338", "#0080ff", "#49607f", "#d0743c", "#ff8c00"];
 
 var linearColorScale = d3.scale.linear()
     .domain([0.0, 100.0])
@@ -75,6 +75,12 @@ function draw() {
         newObject25.x = i;
         newObject45.x = i;
         newObject65.x = i;
+        
+        newObject0.p = 0;
+        newObject15.p = 1;
+        newObject25.p = 2;
+        newObject45.p = 3;
+        newObject65.p = 4;
 
         newObject0.y = parseInt(cityData.get(activatedColumns[i])[1]);
         newObject15.y = parseInt(cityData.get(activatedColumns[i])[2]);
@@ -140,8 +146,12 @@ function draw() {
         .enter()
         .append("rect")
         .attr("x", function(d, i) {
-            //console.log(d);
+            console.log(d);
             return i * (w / dataset[0].length);
+        })
+        .attr("i", function(d, i) {
+            console.log(i);
+            return i;
         })
         .attr("y", function(d) {
             return yScale(d.y) + yScale(d.y0) - h;
@@ -153,7 +163,7 @@ function draw() {
         .on("mouseover", function(d) {
             /* Get this bar's x/y values, then augment for the tooltip */
             var xPosition,
-                yPosition = parseInt(d3.select(this).attr("y"));
+                yPosition = parseInt(d3.select(this).attr("y"))-50;
 
             if (d3.select(this).attr("x") < 350) {
 
@@ -185,7 +195,7 @@ function draw() {
                 .text(cityData.get(activatedColumns[d.x])[0]);
         d3.select(".tooltip")
                 .select(".label")
-                .text(labels[d.x]);
+                .text(labels[d.p]);
 
             /* Show the tooltip */
             d3.select(".tooltip").classed("hidden", false);
