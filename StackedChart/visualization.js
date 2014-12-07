@@ -11,6 +11,7 @@ var dataset = [],
 
 var width = 800;
 var height = 800;
+var labels = ["Personen tussen 0 en 14 jaar oud", "Personen tussen 15 en 24 jaar oud", "Personen tussen 25 en 44 jaar oud", "Personen tussen 45 en 64 jaar oud", "Personen van 65 jaar en ouder"];
 
 var yScale, svg, groups;
 var stack = d3.layout.stack();
@@ -43,7 +44,12 @@ var projection = d3.geo.albers()
 
 var path = d3.geo.path().projection(projection);
 
+
 var gMap = svgMap.append("g");
+
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1);
+
 
 function draw() {
     dataset = [];
@@ -106,6 +112,10 @@ function draw() {
         .append("svg")
         .attr("width", w)
         .attr("height", h);
+        var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left")
+        .tickFormat(d3.format(".2s"));
 
     /* Add a group for each row of data */
     groups = svg.selectAll("g")
@@ -115,6 +125,12 @@ function draw() {
         .style("fill", function(d, i) {
             return colors[i];
         });
+    svg.append("p").html("Test");
+    var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+
 
     groups.selectAll("rect")
         .data(function(d) {
@@ -124,7 +140,7 @@ function draw() {
         .enter()
         .append("rect")
         .attr("x", function(d, i) {
-            console.log(d);
+            //console.log(d);
             return i * (w / dataset[0].length);
         })
         .attr("y", function(d) {
@@ -158,11 +174,18 @@ function draw() {
             d3.select(".tooltip")
                 .style("left", xPosition + "px")
                 .style("top", yPosition + "px")
+                .style("width", "250px")
                 .select(".value")
-                .text(d.y)
-                .select(parentNode)
+                .text(d.y);
+            d3.select(".tooltip")
                 .select(".persons")
-                .text("test");
+                .text(Math.ceil(parseInt(cityData.get(activatedColumns[d.x])[6])*parseInt(d.y)/100));
+            d3.select(".tooltip")
+                .select(".municipality")
+                .text(cityData.get(activatedColumns[d.x])[0]);
+        d3.select(".tooltip")
+                .select(".label")
+                .text(labels[d.x]);
 
             /* Show the tooltip */
             d3.select(".tooltip").classed("hidden", false);
@@ -173,6 +196,8 @@ function draw() {
             d3.select(".tooltip").classed("hidden", true);
         });
 }
+
+
 d3.selectAll("input").on("change", change);
 
 function change() {
