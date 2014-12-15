@@ -9,6 +9,7 @@ import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import javax.media.opengl.GL2;
 import util.TFChangeListener;
 import util.VectorMath;
@@ -45,7 +46,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         tFunc.addTFChangeListener(this);
         tfEditor = new TransferFunctionEditor(tFunc, volume.getHistogram());
         panel.setTransferFunctionEditor(tfEditor);
-
 
     }
 
@@ -111,10 +111,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                         + volumeCenter[2];
 
-                int val = getVoxel(pixelCoord);
+                int val = interpolate(pixelCoord);
                 // Apply the transfer function to obtain a color
                 TFColor voxelColor = tFunc.getColor(val);
-                
+
                 // BufferedImage expects a pixel color packed as ARGB in an int
                 int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
                 int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
@@ -125,7 +125,46 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             }
         }
 
+    }
 
+    /**
+     * Returns an integer array of size 8.
+     *
+     * @return
+     */
+    private short interpolate(double[] coord) {
+        //trilinear interpolation
+        double x = coord[0];
+        double y = coord[1];
+        double z = coord[2];
+        double zd = 0.5;
+        double yd = 0.5;
+        double xd = 0.5;
+        short c00 = (short) ((getVoxel(new double[]{x - 1, y - 1, z - 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y - 1, z - 1}) * xd);
+        short c10 = (short) ((getVoxel(new double[]{x - 1, y + 1, z - 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y + 1, z - 1}) * xd);
+        short c01 = (short) ((getVoxel(new double[]{x - 1, y - 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y - 1, z + 1}) * xd);
+        short c11 = (short) ((getVoxel(new double[]{x - 1, y + 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y + 1, z + 1}) * xd);
+
+        short c0 = (short) (c00 * (1 - yd) + c10 * (yd));
+        short c1 = (short) (c01 * (1 - yd) + c11 * (yd));
+
+        short c = (short) (c0 * (1 - zd) + c1 * zd);
+
+        return (c);
+
+    }
+
+    private short getSafeVoxel(double[] coord) {
+        int x = (int) Math.round(coord[0]);
+        int y = (int) Math.round(coord[1]);
+        int z = (int) Math.round(coord[2]);
+
+        if ((x >= 0) && (x < volume.getDimX()) && (y >= 0) && (y < volume.getDimY())
+                && (z >= 0) && (z < volume.getDimZ())) {
+            return volume.getVoxel(x, y, z);
+        } else {
+            return -1;
+        }
     }
 
     private void drawBoundingBox(GL2 gl) {
@@ -190,7 +229,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     @Override
     public void visualize(GL2 gl) {
 
-
         if (volume == null) {
             return;
         }
@@ -234,7 +272,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         gl.glPopMatrix();
 
         gl.glPopAttrib();
-
 
         if (gl.glGetError() > 0) {
             System.out.println("some OpenGL error: " + gl.glGetError());

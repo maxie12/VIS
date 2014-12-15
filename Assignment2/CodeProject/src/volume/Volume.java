@@ -36,6 +36,7 @@ public class Volume {
     }
 
     public short getVoxel(int x, int y, int z) {
+        //System.out.println("data[x + dimX * (y + dimY * z)] = " + data[x + dimX * (y + dimY * z)]);
         return data[x + dimX * (y + dimY * z)];
     }
 
