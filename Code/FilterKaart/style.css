@@ -1,0 +1,43 @@
+#legend {
+    padding: 1.5em 0 0 1.5em;
+}
+
+li.key {
+    border-top-width: 15px;
+    border-top-style: solid;
+    font-size: .75em;
+    width: 10%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+path {
+        stroke: grey;
+        stroke-width: 1px;
+        fill: white;
+    }
+    
+
+
+
+
+text {
+    font-family: sans-serif;
+    font-size: 20px;
+}
+
+#legend {
+    float:left;
+}
+#map {
+    float:left;
+}
+div.tooltip {
+  position: absolute;	
+  text-align: left;	
+  padding: 5px;	
+  font: 15px sans-serif;	
+  background: lightsteelblue;	
+  border: 10px;					
+  border-radius: 8px;	
+}
