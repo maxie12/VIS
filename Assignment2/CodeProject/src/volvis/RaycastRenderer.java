@@ -145,7 +145,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short c01 = (short) ((getVoxel(new double[]{x - 1, y - 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y - 1, z + 1}) * xd);
         short c11 = (short) ((getVoxel(new double[]{x - 1, y + 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y + 1, z + 1}) * xd);
 
-        short c0 = (short) (c00 * (1 - yd) + c10 * (yd));
+        short c0 = (short) (c00 * (1 - yd) + c10 * (yd)); 
         short c1 = (short) (c01 * (1 - yd) + c11 * (yd));
 
         short c = (short) (c0 * (1 - zd) + c1 * zd);
