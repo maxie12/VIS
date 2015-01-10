@@ -25,6 +25,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     RaycastRendererPanel panel;
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
+    private boolean interpolation = false;
 
     public RaycastRenderer() {
         panel = new RaycastRendererPanel(this);
@@ -99,7 +100,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double[] pixelCoord = new double[3];
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
-
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
         for (int j = 0; j < image.getHeight(); j++) {
@@ -111,7 +111,44 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                         + volumeCenter[2];
 
-                int val = interpolate(pixelCoord);
+                int maximumIntensity = 0;
+                double steps = 50;
+//                double alfa = 0.5;
+                for (double k = 1; k < steps; k++) {
+                    //Calculate Distance: 
+                    double distance = Math.sqrt((pixelCoord[0] - viewVec[0]) * (pixelCoord[0] - viewVec[0])
+                            + (pixelCoord[1] - viewVec[1]) * (pixelCoord[1] - viewVec[1])
+                            + (pixelCoord[2] - viewVec[2]) * (pixelCoord[2] - viewVec[2]));
+                    //Sampling point:
+                    double x = pixelCoord[0] + (distance / steps) * k * viewVec[0];
+                    double y = pixelCoord[1] + (distance / steps) * k * viewVec[1];
+                    double z = pixelCoord[2] + (distance / steps) * k * viewVec[2];
+
+                    if ((x >= 0) && (x < volume.getDimX()) && (y >= 0) && (y < volume.getDimY())
+                            && (z >= 0) && (z < volume.getDimZ())) {
+                        if (interpolation) {
+                            int newValue = interpolate(new double[]{x, y, z});
+                            if (newValue > maximumIntensity) {
+                                maximumIntensity = newValue;
+                            }
+
+                        }
+                        else {
+                           int newValue = getVoxel(new double[]{x, y, z});
+                            if (newValue > maximumIntensity) {
+                                maximumIntensity = newValue;
+                            } 
+                        }
+                    } else {
+                        break;
+                    }
+
+//            System.out.println(i * viewVec[0] + "," + i * viewVec[1] + ", " + i * viewVec[2]);
+//            System.out.println(getVoxel(new double[]{i * viewVec[0], i * viewVec[1], i * viewVec[2]}));
+                }
+                //System.out.println(maximumIntensity);
+
+                int val = (int) Math.floor(maximumIntensity); //interpolate(pixelCoord);
                 // Apply the transfer function to obtain a color
                 TFColor voxelColor = tFunc.getColor(val);
 
@@ -145,7 +182,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short c01 = (short) ((getVoxel(new double[]{x - 1, y - 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y - 1, z + 1}) * xd);
         short c11 = (short) ((getVoxel(new double[]{x - 1, y + 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y + 1, z + 1}) * xd);
 
-        short c0 = (short) (c00 * (1 - yd) + c10 * (yd)); 
+        short c0 = (short) (c00 * (1 - yd) + c10 * (yd));
         short c1 = (short) (c01 * (1 - yd) + c11 * (yd));
 
         short c = (short) (c0 * (1 - zd) + c1 * zd);
