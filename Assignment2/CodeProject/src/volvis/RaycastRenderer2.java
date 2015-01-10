@@ -10,7 +10,6 @@ import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Random;
 import javax.media.opengl.GL2;
 import util.TFChangeListener;
 import util.VectorMath;
@@ -100,20 +99,11 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double[] pixelCoord = new double[3];
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
-        
-        double currentValue = 0;
+
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
-        for (int j = 0; j < image.getHeight(); j += 1) {
-            for (int i = 0; i < image.getWidth(); i += 1) {
-                currentValue += 1 - pixelPercentage;
-
-                if (currentValue > 1) {
-                    currentValue--;
-                    continue;
-                }
-
-
+        for (int j = 0; j < image.getHeight(); j++) {
+            for (int i = 0; i < image.getWidth(); i++) {
                 pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                         + volumeCenter[0];
                 pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -155,7 +145,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short c01 = (short) ((getVoxel(new double[]{x - 1, y - 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y - 1, z + 1}) * xd);
         short c11 = (short) ((getVoxel(new double[]{x - 1, y + 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y + 1, z + 1}) * xd);
 
-        short c0 = (short) (c00 * (1 - yd) + c10 * (yd));
+        short c0 = (short) (c00 * (1 - yd) + c10 * (yd)); 
         short c1 = (short) (c01 * (1 - yd) + c11 * (yd));
 
         short c = (short) (c0 * (1 - zd) + c1 * zd);
