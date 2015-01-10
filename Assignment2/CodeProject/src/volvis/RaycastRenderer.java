@@ -77,7 +77,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
     }
 
     void slicer(double[] viewMatrix) {
-
         // clear image
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
@@ -100,19 +99,18 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double[] pixelCoord = new double[3];
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
-        
-        double currentValue = 0;
+
+        //If this becomes 1, we will skip this pixel. Manages the resolution
+        double skipValue = 0;
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
         for (int j = 0; j < image.getHeight(); j += 1) {
             for (int i = 0; i < image.getWidth(); i += 1) {
-                currentValue += 1 - pixelPercentage;
-
-                if (currentValue > 1) {
-                    currentValue--;
+                skipValue += 1 - pixelPercentage;
+                if (skipValue > 1) {
+                    skipValue--;
                     continue;
                 }
-
 
                 pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                         + volumeCenter[0];
@@ -121,7 +119,39 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
                         + volumeCenter[2];
 
-                int val = interpolate(pixelCoord);
+                int maximumIntensity = 0;
+//                double alfa = 0.5;
+                for (double k = 1; k < samples; k++) {
+                    //Calculate Distance: 
+                    double distance = Math.sqrt((pixelCoord[0] - viewVec[0]) * (pixelCoord[0] - viewVec[0])
+                            + (pixelCoord[1] - viewVec[1]) * (pixelCoord[1] - viewVec[1])
+                            + (pixelCoord[2] - viewVec[2]) * (pixelCoord[2] - viewVec[2]));
+                    //Sampling point:
+                    double x = pixelCoord[0] + (distance / samples) * k * viewVec[0];
+                    double y = pixelCoord[1] + (distance / samples) * k * viewVec[1];
+                    double z = pixelCoord[2] + (distance / samples) * k * viewVec[2];
+
+                    if ((x >= 0) && (x < volume.getDimX()) && (y >= 0) && (y < volume.getDimY())
+                            && (z >= 0) && (z < volume.getDimZ())) {
+                        if (interpolation) {
+                            
+                            int newValue = interpolate(new double[]{x, y, z});
+                            if (newValue > maximumIntensity) {
+                                maximumIntensity = newValue;
+                            }
+                        } else {
+                            int newValue = getVoxel(new double[]{x, y, z});
+                            if (newValue > maximumIntensity) {
+                                maximumIntensity = newValue;
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+
+                }
+
+                int val = (int) Math.floor(maximumIntensity); //interpolate(pixelCoord);
                 // Apply the transfer function to obtain a color
                 TFColor voxelColor = tFunc.getColor(val);
 

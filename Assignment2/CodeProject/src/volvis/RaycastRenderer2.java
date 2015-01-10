@@ -10,6 +10,7 @@ import gui.RaycastRendererPanel;
 import gui.TransferFunctionEditor;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Random;
 import javax.media.opengl.GL2;
 import util.TFChangeListener;
 import util.VectorMath;
@@ -19,14 +20,14 @@ import volume.Volume;
  *
  * @author michel
  */
-public class RaycastRenderer extends Renderer implements TFChangeListener {
+public class RaycastRenderer2 extends RaycastRenderer implements TFChangeListener {
 
     private Volume volume = null;
     RaycastRendererPanel panel;
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
 
-    public RaycastRenderer() {
+    public RaycastRenderer2() {
         panel = new RaycastRendererPanel(this);
         panel.setSpeedLabel("0");
     }
@@ -100,15 +101,26 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
 
+        double currentValue = 0;
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
-                pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
+        for (double j = 0; j < image.getHeight(); j += 1) {
+            for (double i = 0; i < image.getWidth(); i += 1) {
+                currentValue += 1 - pixelPercentage;
+
+                if (currentValue > 1) {
+                    currentValue--;
+                    continue;
+                }
+
+                int intI = (int) i;
+                int intJ = (int) j;
+
+                pixelCoord[0] = uVec[0] * (intI - imageCenter) + vVec[0] * (intJ - imageCenter)
                         + volumeCenter[0];
-                pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
+                pixelCoord[1] = uVec[1] * (intI - imageCenter) + vVec[1] * (intJ - imageCenter)
                         + volumeCenter[1];
-                pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter)
+                pixelCoord[2] = uVec[2] * (intI - imageCenter) + vVec[2] * (intJ - imageCenter)
                         + volumeCenter[2];
 
                 int val = interpolate(pixelCoord);
@@ -121,7 +133,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
                 int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-                image.setRGB(i, j, pixelColor);
+                image.setRGB(intI, intJ, pixelColor);
             }
         }
 
@@ -145,7 +157,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short c01 = (short) ((getVoxel(new double[]{x - 1, y - 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y - 1, z + 1}) * xd);
         short c11 = (short) ((getVoxel(new double[]{x - 1, y + 1, z + 1}) * (1 - xd)) + getVoxel(new double[]{x + 1, y + 1, z + 1}) * xd);
 
-        short c0 = (short) (c00 * (1 - yd) + c10 * (yd)); 
+        short c0 = (short) (c00 * (1 - yd) + c10 * (yd));
         short c1 = (short) (c01 * (1 - yd) + c11 * (yd));
 
         short c = (short) (c0 * (1 - zd) + c1 * zd);

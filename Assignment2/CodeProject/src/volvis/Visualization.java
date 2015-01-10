@@ -33,9 +33,9 @@ public class Visualization implements GLEventListener, TFChangeListener {
     TrackballInteractor trackball;
     boolean mouseMoved = false;
     public double pixelPercentage = 1.0;
+    public int samples = 10;
+    public boolean interpolation = false;
 
-    
-    
     public Visualization(GLCanvas canvas) {
         this.renderers = new ArrayList<Renderer>();
         this.canvas = canvas;
@@ -95,14 +95,14 @@ public class Visualization implements GLEventListener, TFChangeListener {
             } else {
                 r.updateResolution(pixelPercentage);
             }
+            r.updateSamples(samples);
+            r.updateInterpolation(interpolation);
         }
 
         // multiply the current view transform (identity) with trackball transform
         gl.glMultMatrixd(trackball.getTransformationMatrix(), 0);
         // call the visualize() methods of all subscribed renderers
-        for (int i = 0;
-                i < renderers.size();
-                i++) {
+        for (int i = 0; i < renderers.size(); i++) {
             renderers.get(i).visualize(gl);
             // blocking call ensures drawing of renderer is completed before
             // next one starts

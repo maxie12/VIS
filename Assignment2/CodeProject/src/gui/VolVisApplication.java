@@ -22,14 +22,14 @@ public class VolVisApplication extends javax.swing.JFrame {
     Visualization visualization;
     Volume volume;
     RaycastRenderer raycastRenderer;
-    
+
     /**
      * Creates new form VolVisApplication
      */
     public VolVisApplication() {
         initComponents();
         this.setTitle("Volume visualization");
-        
+
         // Create a new visualization for the OpenGL panel
         GLCanvas glCanvas = new GLCanvas();
         renderPanel.setLayout(new BorderLayout());
@@ -41,7 +41,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         visualization.addRenderer(raycastRenderer);
         raycastRenderer.addTFChangeListener(visualization);
         tabbedPanel.addTab("Raycaster", raycastRenderer.getPanel());
-        
+
     }
 
     /**
@@ -59,6 +59,11 @@ public class VolVisApplication extends javax.swing.JFrame {
         loadButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         infoTextPane = new javax.swing.JTextPane();
+        sampleSlider = new javax.swing.JSlider();
+        jLabel1 = new javax.swing.JLabel();
+        resolutionSlider = new javax.swing.JSlider();
+        jLabel2 = new javax.swing.JLabel();
+        interpolationRadio = new javax.swing.JRadioButton();
         renderPanel = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -75,6 +80,43 @@ public class VolVisApplication extends javax.swing.JFrame {
         infoTextPane.setEditable(false);
         jScrollPane1.setViewportView(infoTextPane);
 
+        sampleSlider.setMajorTickSpacing(10);
+        sampleSlider.setOrientation(javax.swing.JSlider.VERTICAL);
+        sampleSlider.setPaintLabels(true);
+        sampleSlider.setPaintTicks(true);
+        sampleSlider.setSnapToTicks(true);
+        sampleSlider.setToolTipText("Resolution");
+        sampleSlider.setName(""); // NOI18N
+        sampleSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                sampleSliderStateChanged(evt);
+            }
+        });
+
+        jLabel1.setText("Resolution");
+
+        resolutionSlider.setMajorTickSpacing(10);
+        resolutionSlider.setOrientation(javax.swing.JSlider.VERTICAL);
+        resolutionSlider.setPaintLabels(true);
+        resolutionSlider.setPaintTicks(true);
+        resolutionSlider.setSnapToTicks(true);
+        resolutionSlider.setToolTipText("Resolution");
+        resolutionSlider.setName(""); // NOI18N
+        resolutionSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                resolutionSliderStateChanged(evt);
+            }
+        });
+
+        jLabel2.setText("Samples");
+
+        interpolationRadio.setText("Interpolation");
+        interpolationRadio.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                interpolationRadioItemStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout loadVolumeLayout = new javax.swing.GroupLayout(loadVolume);
         loadVolume.setLayout(loadVolumeLayout);
         loadVolumeLayout.setHorizontalGroup(
@@ -85,16 +127,38 @@ public class VolVisApplication extends javax.swing.JFrame {
                     .addComponent(jScrollPane1)
                     .addGroup(loadVolumeLayout.createSequentialGroup()
                         .addComponent(loadButton)
-                        .addGap(0, 265, Short.MAX_VALUE)))
+                        .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(loadVolumeLayout.createSequentialGroup()
+                                .addGap(12, 12, 12)
+                                .addComponent(resolutionSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(loadVolumeLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel1)))
+                        .addGap(18, 18, 18)
+                        .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel2)
+                            .addGroup(loadVolumeLayout.createSequentialGroup()
+                                .addComponent(sampleSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(interpolationRadio)))
+                        .addGap(0, 49, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         loadVolumeLayout.setVerticalGroup(
             loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(loadVolumeLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(loadButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE)
+                .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2))
+                .addGap(11, 11, 11)
+                .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(loadButton)
+                    .addComponent(resolutionSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(interpolationRadio)
+                    .addComponent(sampleSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(11, 11, 11)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -125,7 +189,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(splitPane, javax.swing.GroupLayout.DEFAULT_SIZE, 524, Short.MAX_VALUE)
+            .addComponent(splitPane)
         );
 
         pack();
@@ -156,19 +220,37 @@ public class VolVisApplication extends javax.swing.JFrame {
         });
         int returnVal = fc.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File file = fc.getSelectedFile();
-                volume = new Volume(file);
-                
-                String infoText = new String("Volume data info:\n");
-                infoText = infoText.concat(file.getName() + "\n");
-                infoText = infoText.concat("dimensions:\t\t" + volume.getDimX() + " x " + volume.getDimY() + " x " + volume.getDimZ() + "\n");
-                infoText = infoText.concat("voxel value range:\t" + volume.getMinimum() + " - " + volume.getMaximum());
-                infoTextPane.setText(infoText);
-                raycastRenderer.setVolume(volume);
-                visualization.update();
+            File file = fc.getSelectedFile();
+            volume = new Volume(file);
+
+            String infoText = new String("Volume data info:\n");
+            infoText = infoText.concat(file.getName() + "\n");
+            infoText = infoText.concat("dimensions:\t\t" + volume.getDimX() + " x " + volume.getDimY() + " x " + volume.getDimZ() + "\n");
+            infoText = infoText.concat("voxel value range:\t" + volume.getMinimum() + " - " + volume.getMaximum());
+            infoTextPane.setText(infoText);
+            raycastRenderer.setVolume(volume);
+            visualization.update();
 
         }
     }//GEN-LAST:event_loadButtonActionPerformed
+
+    private void sampleSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_sampleSliderStateChanged
+        int value = sampleSlider.getValue();
+        if (value == 0) {
+            value++;
+        }
+        visualization.samples = value;
+        visualization.update();
+    }//GEN-LAST:event_sampleSliderStateChanged
+
+    private void resolutionSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_resolutionSliderStateChanged
+        visualization.pixelPercentage = resolutionSlider.getValue() / 100.0;
+    }//GEN-LAST:event_resolutionSliderStateChanged
+
+    private void interpolationRadioItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_interpolationRadioItemStateChanged
+        visualization.interpolation = interpolationRadio.isSelected();
+        visualization.update();
+    }//GEN-LAST:event_interpolationRadioItemStateChanged
 
     /**
      * @param args the command line arguments
@@ -206,10 +288,15 @@ public class VolVisApplication extends javax.swing.JFrame {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextPane infoTextPane;
+    private javax.swing.JRadioButton interpolationRadio;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton loadButton;
     private javax.swing.JPanel loadVolume;
     private javax.swing.JPanel renderPanel;
+    private javax.swing.JSlider resolutionSlider;
+    private javax.swing.JSlider sampleSlider;
     private javax.swing.JSplitPane splitPane;
     private javax.swing.JTabbedPane tabbedPanel;
     // End of variables declaration//GEN-END:variables
