@@ -14,19 +14,24 @@ import util.TFChangeListener;
  * @author michel
  */
 public abstract class Renderer {
-     int winWidth, winHeight;
+
+    int winWidth, winHeight;
     boolean visible = false;
     boolean interactiveMode = false;
     ArrayList<TFChangeListener> listeners = new ArrayList<TFChangeListener>();
+    //What percentage of the pixels to display, Range from 0.0 tot 1.0
+    double pixelPercentage = 1.0;
+    int samples = 10;
+    boolean interpolation = false;
 
     public Renderer() {
-        
+
     }
 
     public void setInteractiveMode(boolean flag) {
         interactiveMode = flag;
     }
-    
+
     public void setWinWidth(int w) {
         winWidth = w;
     }
@@ -43,6 +48,18 @@ public abstract class Renderer {
         return winHeight;
     }
 
+    public void updateSamples(int samples) {
+        this.samples = samples;
+    }
+
+    public void updateResolution(double pixelPercentage) {
+        this.pixelPercentage = pixelPercentage;
+    }
+
+    public void updateInterpolation(boolean interpolation) {
+        this.interpolation = interpolation;
+    }
+
     public void setVisible(boolean flag) {
         visible = flag;
     }
@@ -56,6 +73,6 @@ public abstract class Renderer {
             listeners.add(l);
         }
     }
-    
+
     public abstract void visualize(GL2 gl);
 }

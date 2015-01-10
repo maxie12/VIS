@@ -98,6 +98,7 @@ public class TrackballInteractor {
         gl.glMultMatrixd(trackballXform, 0);
         gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, trackballXform, 0);
         gl.glPopMatrix();
+
         setRotating(false);
     }
     
