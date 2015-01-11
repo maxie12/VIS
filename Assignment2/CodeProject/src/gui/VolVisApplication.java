@@ -10,6 +10,8 @@ import javax.media.opengl.awt.GLCanvas;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 import volume.Volume;
+import volvis.CompositingRaycastRenderer;
+import volvis.OpacityWeightingRayCaster;
 import volvis.RaycastRenderer;
 import volvis.Visualization;
 
@@ -37,7 +39,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         visualization = new Visualization(glCanvas);
         glCanvas.addGLEventListener(visualization);
 
-        raycastRenderer = new RaycastRenderer();
+        raycastRenderer = new OpacityWeightingRayCaster();
         visualization.addRenderer(raycastRenderer);
         raycastRenderer.addTFChangeListener(visualization);
         tabbedPanel.addTab("Raycaster", raycastRenderer.getPanel());
