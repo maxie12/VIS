@@ -215,7 +215,7 @@ public class VolVisApplication extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        tabbedPanel.addTab("Load", loadVolume);
+        tabbedPanel.addTab("Settings", loadVolume);
 
         splitPane.setRightComponent(tabbedPanel);
 
@@ -237,7 +237,7 @@ public class VolVisApplication extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(splitPane, javax.swing.GroupLayout.DEFAULT_SIZE, 991, Short.MAX_VALUE)
+                .addComponent(splitPane)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
