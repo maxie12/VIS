@@ -96,7 +96,6 @@ public class VolVisApplication extends javax.swing.JFrame {
         resolutionSlider = new javax.swing.JSlider();
         jLabel2 = new javax.swing.JLabel();
         interpolationRadio = new javax.swing.JRadioButton();
-        renderSelector = new javax.swing.JComboBox();
         renderPanel = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -150,18 +149,6 @@ public class VolVisApplication extends javax.swing.JFrame {
             }
         });
 
-        renderSelector.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "RaycastRenderer", "CompositingRayCastRenderer", "OpacityWeightingRayCaster" }));
-        renderSelector.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                renderSelectorItemStateChanged(evt);
-            }
-        });
-        renderSelector.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-            public void propertyChange(java.beans.PropertyChangeEvent evt) {
-                renderSelectorPropertyChange(evt);
-            }
-        });
-
         javax.swing.GroupLayout loadVolumeLayout = new javax.swing.GroupLayout(loadVolume);
         loadVolume.setLayout(loadVolumeLayout);
         loadVolumeLayout.setHorizontalGroup(
@@ -185,10 +172,8 @@ public class VolVisApplication extends javax.swing.JFrame {
                             .addGroup(loadVolumeLayout.createSequentialGroup()
                                 .addComponent(sampleSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(interpolationRadio)
-                                    .addComponent(renderSelector, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                                .addComponent(interpolationRadio)))
+                        .addGap(0, 85, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         loadVolumeLayout.setVerticalGroup(
@@ -202,9 +187,7 @@ public class VolVisApplication extends javax.swing.JFrame {
                 .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loadVolumeLayout.createSequentialGroup()
                         .addComponent(interpolationRadio)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(renderSelector, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(162, 162, 162))
+                        .addGap(184, 184, 184))
                     .addGroup(loadVolumeLayout.createSequentialGroup()
                         .addGroup(loadVolumeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(loadButton)
@@ -307,14 +290,6 @@ public class VolVisApplication extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_loadButtonActionPerformed
 
-    private void renderSelectorPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_renderSelectorPropertyChange
-
-    }//GEN-LAST:event_renderSelectorPropertyChange
-
-    private void renderSelectorItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_renderSelectorItemStateChanged
-
-    }//GEN-LAST:event_renderSelectorItemStateChanged
-
     public void updateRenderer(int newSelected) {
         if (newSelected != renderSelected) {
             visualization.removeRenderer(raycastRenderer);
@@ -376,7 +351,6 @@ public class VolVisApplication extends javax.swing.JFrame {
     private javax.swing.JButton loadButton;
     private javax.swing.JPanel loadVolume;
     private javax.swing.JPanel renderPanel;
-    private javax.swing.JComboBox renderSelector;
     private javax.swing.JSlider resolutionSlider;
     private javax.swing.JSlider sampleSlider;
     private javax.swing.JSplitPane splitPane;

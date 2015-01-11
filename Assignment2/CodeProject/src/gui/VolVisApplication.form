@@ -86,13 +86,10 @@
                                       <Group type="102" alignment="0" attributes="0">
                                           <Component id="sampleSlider" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace max="-2" attributes="0"/>
-                                          <Group type="103" groupAlignment="0" attributes="0">
-                                              <Component id="interpolationRadio" min="-2" max="-2" attributes="0"/>
-                                              <Component id="renderSelector" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          </Group>
+                                          <Component id="interpolationRadio" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                   </Group>
-                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                  <EmptySpace min="0" pref="85" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
@@ -111,9 +108,7 @@
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="1" attributes="0">
                                   <Component id="interpolationRadio" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="renderSelector" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace min="-2" pref="162" max="-2" attributes="0"/>
+                                  <EmptySpace min="-2" pref="184" max="-2" attributes="0"/>
                               </Group>
                               <Group type="102" attributes="0">
                                   <Group type="103" groupAlignment="3" attributes="0">
@@ -197,21 +192,6 @@
                   </Properties>
                   <Events>
                     <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="interpolationRadioItemStateChanged"/>
-                  </Events>
-                </Component>
-                <Component class="javax.swing.JComboBox" name="renderSelector">
-                  <Properties>
-                    <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                      <StringArray count="3">
-                        <StringItem index="0" value="RaycastRenderer"/>
-                        <StringItem index="1" value="CompositingRayCastRenderer"/>
-                        <StringItem index="2" value="OpacityWeightingRayCaster"/>
-                      </StringArray>
-                    </Property>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="renderSelectorItemStateChanged"/>
-                    <EventHandler event="propertyChange" listener="java.beans.PropertyChangeListener" parameters="java.beans.PropertyChangeEvent" handler="renderSelectorPropertyChange"/>
                   </Events>
                 </Component>
               </SubComponents>
