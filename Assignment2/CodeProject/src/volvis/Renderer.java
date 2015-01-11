@@ -74,5 +74,11 @@ public abstract class Renderer {
         }
     }
 
+    public void removeTFChangeListener(TFChangeListener l) {
+        if (listeners.contains(l)) {
+            listeners.remove(l);
+        }
+    }
+
     public abstract void visualize(GL2 gl);
 }

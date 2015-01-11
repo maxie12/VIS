@@ -15,7 +15,6 @@ public class RaycastRendererPanel extends javax.swing.JPanel {
 
     RaycastRenderer renderer;
     TransferFunctionEditor tfEditor;
-    
     /**
      * Creates new form RaycastRendererPanel
      */

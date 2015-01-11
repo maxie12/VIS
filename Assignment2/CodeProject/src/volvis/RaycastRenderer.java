@@ -23,10 +23,14 @@ import volume.Volume;
 public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     private Volume volume = null;
+    public TransferFunction tFunc;
+    public TransferFunctionEditor tfEditor;
     RaycastRendererPanel panel;
-    TransferFunction tFunc;
-    TransferFunctionEditor tfEditor;
 
+    /**
+     *
+     * @param index
+     */
     public RaycastRenderer() {
         panel = new RaycastRendererPanel(this);
         panel.setSpeedLabel("0");

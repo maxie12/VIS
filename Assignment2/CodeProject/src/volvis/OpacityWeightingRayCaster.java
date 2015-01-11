@@ -101,10 +101,18 @@ public class OpacityWeightingRayCaster extends RaycastRenderer {
         double[] pixelCoord = new double[3];
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
+        //If this becomes 1, we will skip this pixel. Manages the resolution
+        double skipValue = 0;
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
+                skipValue += 1 - pixelPercentage;
+                if (skipValue > 1) {
+                    skipValue--;
+                    continue;
+                }
+
                 pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                         + volumeCenter[0];
                 pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -120,7 +128,7 @@ public class OpacityWeightingRayCaster extends RaycastRenderer {
                 double pixelBlue = 0;
                 double pixelGreen = 0;
                 double pixelAlpha = 0;
-                for (double k = 1; k < steps; k++) {
+                for (double k = 1; k < samples; k++) {
                     //Calculate Distance: 
                     double distance = Math.sqrt((pixelCoord[0] - viewVec[0]) * (pixelCoord[0] - viewVec[0])
                             + (pixelCoord[1] - viewVec[1]) * (pixelCoord[1] - viewVec[1])
@@ -135,12 +143,12 @@ public class OpacityWeightingRayCaster extends RaycastRenderer {
                         int newValue;
                         double[] coord = new double[]{x, y, z};
 
-//                        if (interpolation) {
-//                            newValue = interpolate(coord);
-//                            //value += alfa * interpolate(coord);
-//                        } else {
-                        newValue = getVoxel(coord);
-//                        }
+                        if (interpolation) {
+                            newValue = interpolate(coord);
+                            //value += alfa * interpolate(coord);
+                        } else {
+                            newValue = getVoxel(coord);
+                        }
 
                         //assume that we always have 2 controlPoints
                         double absoluteGradient = getAbsoluteOfVector(getGradientVector(coord));
@@ -159,12 +167,11 @@ public class OpacityWeightingRayCaster extends RaycastRenderer {
 
                         double alpha = absoluteGradient * (avn1 + avn);
 
-                        
                         TFColor voxelColor = tFunc.getColor(newValue);
-                        pixelRed = voxelColor.r * alfa + (1 - alfa) * pixelRed;
-                        pixelGreen = voxelColor.g * alfa + (1 - alfa) * pixelGreen;
-                        pixelBlue = voxelColor.b * alfa + (1 - alfa) * pixelBlue;
-                        pixelAlpha += Math.sqrt(alpha) * 1/steps;
+                        pixelRed = voxelColor.r * alpha * alfa + (1 - alfa) * pixelRed;
+                        pixelGreen = voxelColor.g * alpha * alfa + (1 - alfa) * pixelGreen;
+                        pixelBlue = voxelColor.b * alpha * alfa + (1 - alfa) * pixelBlue;
+                        pixelAlpha += alpha * 1 / steps;
 //                        pixelAlpha = alfa;
 
                     } else {

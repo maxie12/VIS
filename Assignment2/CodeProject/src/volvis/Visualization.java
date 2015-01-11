@@ -48,6 +48,14 @@ public class Visualization implements GLEventListener, TFChangeListener {
     // Add a new renderer (i.e. visualization method) to the visualization
     public void addRenderer(Renderer vis) {
         renderers.add(vis);
+        update();
+    }
+
+    // remove a renderer (i.e. visualization method) to the visualization
+
+    public void removeRenderer(Renderer vis) {
+        renderers.remove(vis);
+        update();
     }
 
     public void update() {

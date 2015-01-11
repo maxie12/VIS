@@ -100,10 +100,17 @@ public class CompositingRaycastRenderer extends RaycastRenderer {
         double[] pixelCoord = new double[3];
         double[] volumeCenter = new double[3];
         VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
+        //If this becomes 1, we will skip this pixel. Manages the resolution
+        double skipValue = 0;
         // sample on a plane through the origin of the volume data
         double max = volume.getMaximum();
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
+                skipValue += 1 - pixelPercentage;
+                if (skipValue > 1) {
+                    skipValue--;
+                    continue;
+                }
                 pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter)
                         + volumeCenter[0];
                 pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter)
@@ -119,7 +126,7 @@ public class CompositingRaycastRenderer extends RaycastRenderer {
                 double pixelBlue = 0;
                 double pixelGreen = 0;
                 double pixelAlpha = 0;
-                for (double k = 1; k < steps; k++) {
+                for (double k = 1; k < samples; k++) {
                     //Calculate Distance: 
                     double distance = Math.sqrt((pixelCoord[0] - viewVec[0]) * (pixelCoord[0] - viewVec[0])
                             + (pixelCoord[1] - viewVec[1]) * (pixelCoord[1] - viewVec[1])
@@ -134,7 +141,6 @@ public class CompositingRaycastRenderer extends RaycastRenderer {
                         int newValue;
                         if (interpolation) {
                             newValue = interpolate(new double[]{x, y, z});
-                            //value += alfa * interpolate(new double[]{x, y, z});
                         } else {
                             newValue = getVoxel(new double[]{x, y, z});
                         }
