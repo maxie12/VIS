@@ -184,7 +184,6 @@ public class OpacityWeightingRayCaster extends RaycastRenderer {
                 int c_green = pixelGreen <= 1.0 ? (int) Math.floor(pixelGreen * 255) : 255;
                 int c_blue = pixelBlue <= 1.0 ? (int) Math.floor(pixelBlue * 255) : 255;
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-//                pixelColor = ((int) Math.floor(c_alpha) << 24) | ((int) Math.floor(c_red) << 16) | ((int) Math.floor(c_green) << 8) | (int) Math.floor(c_blue);
                 image.setRGB(i, j, pixelColor);
             }
         }

@@ -25,7 +25,6 @@ public class CompositingRaycastRenderer extends RaycastRenderer {
     RaycastRendererPanel panel;
     TransferFunction tFunc;
     TransferFunctionEditor tfEditor;
-    private boolean interpolation = false;
 
     public CompositingRaycastRenderer() {
         panel = new RaycastRendererPanel(this);
@@ -150,19 +149,12 @@ public class CompositingRaycastRenderer extends RaycastRenderer {
                         pixelBlue = voxelColor.b * voxelColor.a + (1 - voxelColor.a) * pixelBlue;
                         pixelAlpha += voxelColor.a * alfa;
 
-//                        c_red = c_red * (1-alfa) + alfa * voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
-//                        c_blue = c_blue * (1-alfa) + alfa * voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
-//                        c_green = c_green * (1-alfa) +alfa * voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
-//                        c_alpha = c_alpha * (1-alfa) + alfa * voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
                     } else {
                         break;
                     }
 
-//            System.out.println(i * viewVec[0] + "," + i * viewVec[1] + ", " + i * viewVec[2]);
-//            System.out.println(getVoxel(new double[]{i * viewVec[0], i * viewVec[1], i * viewVec[2]}));
                 }
-                //System.out.println(value);
-//                pixelColor = ((int) Math.floor(c_red) << 16) | ((int) Math.floor(c_green) << 8) | (int) Math.floor(c_blue);
+
                 int c_alpha = pixelAlpha <= 1.0 ? (int) Math.floor(pixelAlpha * 255) : 255;
                 int c_red = pixelRed <= 1.0 ? (int) Math.floor(pixelRed * 255) : 255;
                 int c_green = pixelGreen <= 1.0 ? (int) Math.floor(pixelGreen * 255) : 255;
