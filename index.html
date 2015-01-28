@@ -1,80 +1,106 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
-path {
-  stroke: grey;
-  stroke-width: 1px;
-  fill: white;
-}
+    path {
+        stroke: grey;
+        stroke-width: 1px;
+        fill: none;
+    }
 </style>
 <body>
-<script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="http://d3js.org/queue.v1.min.js"></script>
-<script src="http://d3js.org/topojson.v1.min.js"></script>
-<script>
-var countries = [];
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://d3js.org/queue.v1.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script>
 
-var width = 800,
-    height = 800;
+        var countries = [];
 
-var cityData = d3.map();
+        //set the margins
+        var margin = {top: 30, right: 20, bottom: 30, left: 50},
+        width = 600 - margin.left - margin.right,
+                height = 270 - margin.top - margin.bottom;
 
-var linearColorScale = d3.scale.linear()
-    .domain([0.0, 100.0])
-    .range(["white", "red"]);
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+        var countryData;
 
-// Setup the map projection for a good depiction of The Netherlands. The
-// projection is centered on the geographical center of the country, which
-// happens to be the city of Lunteren.
-var projection = d3.geo.albers()
-      .rotate([0, 0])
-      .center([5.6, 52.1])
-      .parallels([50, 53])
-      .scale(15000)
-      .translate([width/2,height/2]);
 
-var path = d3.geo.path().projection(projection);
- 
-var g = svg.append("g");
+        d3.tsv("internet.csv", function (csv_data) {
+            console.log(1);
+            countryData = d3.nest()
+                    .key(function (d) {
+                        return d.Country;
+                    })
+                    .key(function (d) {
+                        return d.Year;
+                    })
+                    .entries(csv_data);
+            console.log(2);
+            dataLoaded();
+        });
 
-queue()
-   .defer(d3.dsv(";", "text/plain"), "internet.csv", function(d) { 
-   		for(country1 in d) {
-   			if(country1 == "Year") {
-   				continue;
-   			}
-   			if(d[country1] == "") {
-   				continue;
-   			}
-   			//if(!countries[country1]) {
-   			//	countries.push({country : country1,
-   		    //				data : []});
-   			//}
-   			
-   			//countries.country1.data.push({year : d.Year,
-   			//						  connectivity : d[country1]});
-   			console.log(country1 + ": " + d.Year + " => " + d[country1]); 
-   		} 
-   	})
-   //.defer(d3.tsv, "cities-data.txt", function(d) { cityData.set(d.Code, +d.AUTO_TOT); })
-   .await(dataLoaded);
+        function dataLoaded(error, data) {
 
-function dataLoaded(error, mapData) {
-//    var maxValue = d3.max(cityData.values());
-//    console.log("The maximum value is " + maxValue);
-//    linearColorScale.domain([0.0, maxValue]);
-//    g.selectAll("path")
- //   .data(mapData.features).enter()
-  //  .append("path")
-  //  .attr("d", path)
-  //  .style("fill", function(d) { return linearColorScale(cityData.get(d.gm_code)); })
-  //  .append("title").text(function(d) {return d.gm_naam + ", " +
-  //  cityData.get(d.gm_code); });
-}
-</script>
+
+            console.log(3);
+            // Loop through each country
+            countryData.forEach(function (d) {
+                //in a country
+                svg.append("path")
+                        .attr("class", "line")
+                        .attr("d", priceline(d.values));
+            });
+            console.log(6);
+
+            // Add the X Axis
+            svg.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis);
+
+            // Add the Y Axis
+            svg.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis);
+            console.log(7);
+        }
+
+
+
+// Set the ranges
+        var x = d3.scale.linear()
+                .range([0, width])
+                .domain([1990, 2012]);
+        var y = d3.scale.linear()
+                .range([height, 0])
+                .domain([0, 100]);
+
+// Define the axes
+        var xAxis = d3.svg.axis().scale(x)
+                .orient("bottom").ticks(5);
+
+        var yAxis = d3.svg.axis().scale(y)
+                .orient("left").ticks(5);
+
+// Define the line
+        var priceline = d3.svg.line()
+                .x(function (d) {
+                    return x(d.values[0].Year);
+                })
+                .y(function (d) {
+                    return y(d.values[0].Value);
+                });
+
+// Adds the svg canvas
+        var svg = d3.select("body")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform",
+                        "translate(" + margin.left + "," + margin.top + ")");
+
+
+    </script>
 </body>
 </html>
+
