@@ -12,30 +12,50 @@
         font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
     }
 
-    .axis path,
+    .axis path{
+        stroke-width: 0;
+    }
     .axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
+        stroke: lightgray;
+        opacity: 0.8;
     }
 
-    .axis--y path {
-        display: none;
-    }
 
     .cities {
         fill: none;
         stroke: #aaa;
         stroke-linejoin: round;
         stroke-linecap: round;
-        stroke-width: 1.5px;
+        stroke-width: 1.25px;
     }
 
-    .city--hover {
-        stroke: #000;
+
+    .country--hover {
+        stroke: #FF0000;
+        stroke-width: 1.75px;
+    }
+    .country--selected {
+        stroke: #00FF00;
+        stroke-width: 1.75px;
+    }
+    .country--hoverselected {
+        stroke: #000000;
+        stroke-width: 1.75px;
     }
 
-    .focus text {
+    .textbox{  
+        width: 60px;                  
+        height: 28px;                 
+        padding: 2px;             
+        font: 12px sans-serif; 
+        background: lightsteelblue;   
+        border: 0px;      
+        border-radius: 8px;           
+
+    }
+    .text {
+        //background: lightsteelblue;   
+
         text-anchor: middle;
         text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
     }
@@ -45,22 +65,11 @@
         pointer-events: all;
     }
 
-    .voronoi--show path {
-        stroke: red;
-        stroke-opacity: .2;
-    }
-
-    #form {
-        position: absolute;
-        top: 20px;
-        right: 30px;
-    }
 
 </style>
-<label id="form" for="show-voronoi">
-    Show Voronoi
-    <input type="checkbox" id="show-voronoi" disabled>
-</label>
+<div>
+    <!--empty div as otherwise the visualisation is not showing-->
+</div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
@@ -71,6 +80,8 @@
 
     var formatxAxis = d3.format('04d');
 
+    //array which holds which countries are selected
+    var selectedCountries = [];
 
     var x = d3.scale.linear()
             .range([0, width]);
@@ -83,7 +94,7 @@
 
     var voronoi = d3.geom.voronoi()
             .x(function(d) {
-                return x(d.date);
+                return x(d.year);
             })
             .y(function(d) {
                 return y(d.value);
@@ -92,7 +103,7 @@
 
     var line = d3.svg.line()
             .x(function(d) {
-                return x(d.date);
+                return x(d.year);
             })
             .y(function(d) {
                 return y(d.value);
@@ -118,19 +129,22 @@
                 .call(d3.svg.axis()
                         .scale(x)
                         .orient("bottom")
+                        .tickSize(-height, 0, 0)
                         .tickFormat(formatxAxis));
+
 
         svg.append("g")
                 .attr("class", "axis axis--y")
                 .call(d3.svg.axis()
                         .scale(y)
                         .orient("left")
+                        .tickSize(-width, 0, 0)
                         .ticks(10, "%"))
                 .append("text")
                 .attr("x", 4)
                 .attr("dy", ".32em")
                 .style("font-weight", "bold")
-                .text("Unemployment Rate");
+                .text("Internet connectivity percentage");
 
         svg.append("g")
                 .attr("class", "cities")
@@ -148,16 +162,20 @@
 
         focus.append("circle")
                 .attr("r", 3.5);
-
         focus.append("text")
                 .attr("y", -10);
+        focus.append("textbox")
+                .attr("y", -20)
+                .attr("width", "20px")
+                .attr("height", "20px");
+
         var voronoiGroup = svg.append("g")
                 .attr("class", "voronoi");
 
         voronoiGroup.selectAll("path")
                 .data(voronoi(d3.nest()
                         .key(function(d) {
-                            return x(d.date) + "," + y(d.value);
+                            return x(d.year) + "," + y(d.value);
                         })
                         .rollup(function(v) {
                             return v[0];
@@ -182,18 +200,105 @@
                     }
                 })
                 .on("mouseover", mouseover)
-                .on("mouseout", mouseout);
+                .on("mouseout", mouseout)
+                .on("mousedown", mouseclick);
 
         function mouseover(d) {
-            d3.select(d.city.line).classed("city--hover", true);
-            d.city.line.parentNode.appendChild(d.city.line);
-            focus.attr("transform", "translate(" + x(d.date) + "," + y(d.value) + ")");
-            focus.select("text").text(d.city.name);
+            var countryName = d.country.countryName;
+            if (countainsCountry(countryName))
+            {
+                //reset color
+                d3.select(d.country.line).classed("country--hoverselected", true);
+                d3.select(d.country.line).classed("country--hover", false);
+                d3.select(d.country.line).classed("country--selected", false);
+            } else {
+                d3.select(d.country.line).classed("country--hoverselected", false);
+                d3.select(d.country.line).classed("country--hover", true);
+                d3.select(d.country.line).classed("country--selected", false);
+            }
+
+            focus.attr("transform", "translate(" + x(d.year) + "," + y(d.value) + ")");
+            focus.select("text").html("country: " + countryName + "\r\n" +
+                    "Year " + d.originalYear.substring(0, 4) + "\r\n" +
+                    "internetConnectity: " + (Math.round(d.originalValue * 100) / 100) + "%");
+            //TODO Get textBox to work so we display this properly
+        }
+        function mouseout(d) {
+            var countryName = d.country.countryName;
+            d3.select(d.country.line).classed("country--hover", false);
+            if (countainsCountry(countryName))
+            {
+                //TODO Set the colors differently
+                //reset color
+                d3.select(d.country.line).classed("country--hoverselected", false);
+                d3.select(d.country.line).classed("country--hover", false);
+                d3.select(d.country.line).classed("country--selected", true);
+            } else {
+                //TODO Set the colors differently
+                d3.select(d.country.line).classed("country--hoverselected", false);
+                d3.select(d.country.line).classed("country--hover", false);
+                d3.select(d.country.line).classed("country--selected", false);
+            }
+
+            focus.attr("transform", "translate(-100,-100)");
         }
 
-        function mouseout(d) {
-            d3.select(d.city.line).classed("city--hover", false);
-            focus.attr("transform", "translate(-100,-100)");
+
+        function mouseclick(d) {
+            console.log(1);
+            console.log(d3.select("path"));
+            var countryName = d.country.countryName;
+            if (countainsCountry(countryName))
+            {
+                //country was no in array yet, so we select it
+                console.log("not contained");
+                removeSelectedCountry(countryName)
+            } else {
+                //country was in array, so we remove it
+                console.log("Contained");
+                addSelectedCountry(countryName);
+            }
+        }
+        function removeSelectedCountry(countryName)
+        {
+            var index = selectedCountries.indexOf(countryName);
+            selectedCountries.splice(index, 1);
+
+            var country = findCountry(countryName);
+            //color the line
+            d3.select(country.line).classed("country--selected", false);
+        }
+
+        function addSelectedCountry(countryName)
+        {
+            selectedCountries.push(countryName);
+
+            var country = findCountry(countryName);
+            //color the line
+            d3.select(country.line).classed("country--selected", true);
+        }
+
+        function findCountry(countryName)
+        {
+            var path = d3.select("g.cities").selectAll("path").filter(function(d) {
+                if (d.countryName === countryName)
+                {
+                    return d;
+                }
+            })[0][0];
+            var country = path.__data__;
+            return country;
+        }
+
+        function countainsCountry(countryName)
+        {
+            var index = selectedCountries.indexOf(countryName);
+            if (index === -1)
+            {
+                return false;
+            } else {
+                return true;
+            }
         }
     });
 
@@ -205,10 +310,10 @@
         };
         country.values = years.map(function(y) {
             return {
-                city: country,
-                date: y,
+                country: country,
+                year: y,
                 value: Math.abs(d[y] / 100),
-                originalDate: Math.floor(y) + ".0",
+                originalYear: Math.floor(y) + ".0",
                 originalValue: d[Math.floor(y) + ".0"] / 100
             };
         });
