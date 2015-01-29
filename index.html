@@ -1,80 +1,218 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
-path {
-  stroke: grey;
-  stroke-width: 1px;
-  fill: white;
-}
+
+    body {
+        width: 960px;
+        margin: auto;
+        position: relative;
+    }
+
+    svg {
+        font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+
+    .axis--y path {
+        display: none;
+    }
+
+    .cities {
+        fill: none;
+        stroke: #aaa;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        stroke-width: 1.5px;
+    }
+
+    .city--hover {
+        stroke: #000;
+    }
+
+    .focus text {
+        text-anchor: middle;
+        text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+    }
+
+    .voronoi path {
+        fill: none;
+        pointer-events: all;
+    }
+
+    .voronoi--show path {
+        stroke: red;
+        stroke-opacity: .2;
+    }
+
+    #form {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+    }
+
 </style>
-<body>
+<label id="form" for="show-voronoi">
+    Show Voronoi
+    <input type="checkbox" id="show-voronoi" disabled>
+</label>
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="http://d3js.org/queue.v1.min.js"></script>
-<script src="http://d3js.org/topojson.v1.min.js"></script>
 <script>
-var countries = [];
 
-var width = 800,
-    height = 800;
+    var years;
+    var margin = {top: 20, right: 30, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
 
-var cityData = d3.map();
+    var formatxAxis = d3.format('04d');
 
-var linearColorScale = d3.scale.linear()
-    .domain([0.0, 100.0])
-    .range(["white", "red"]);
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+    var x = d3.scale.linear()
+            .range([0, width]);
 
-// Setup the map projection for a good depiction of The Netherlands. The
-// projection is centered on the geographical center of the country, which
-// happens to be the city of Lunteren.
-var projection = d3.geo.albers()
-      .rotate([0, 0])
-      .center([5.6, 52.1])
-      .parallels([50, 53])
-      .scale(15000)
-      .translate([width/2,height/2]);
 
-var path = d3.geo.path().projection(projection);
- 
-var g = svg.append("g");
+    var y = d3.scale.linear()
+            .range([height, 0]);
 
-queue()
-   .defer(d3.dsv(";", "text/plain"), "internet.csv", function(d) { 
-   		for(country1 in d) {
-   			if(country1 == "Year") {
-   				continue;
-   			}
-   			if(d[country1] == "") {
-   				continue;
-   			}
-   			//if(!countries[country1]) {
-   			//	countries.push({country : country1,
-   		    //				data : []});
-   			//}
-   			
-   			//countries.country1.data.push({year : d.Year,
-   			//						  connectivity : d[country1]});
-   			console.log(country1 + ": " + d.Year + " => " + d[country1]); 
-   		} 
-   	})
-   //.defer(d3.tsv, "cities-data.txt", function(d) { cityData.set(d.Code, +d.AUTO_TOT); })
-   .await(dataLoaded);
+    var color = d3.scale.category20();
 
-function dataLoaded(error, mapData) {
-//    var maxValue = d3.max(cityData.values());
-//    console.log("The maximum value is " + maxValue);
-//    linearColorScale.domain([0.0, maxValue]);
-//    g.selectAll("path")
- //   .data(mapData.features).enter()
-  //  .append("path")
-  //  .attr("d", path)
-  //  .style("fill", function(d) { return linearColorScale(cityData.get(d.gm_code)); })
-  //  .append("title").text(function(d) {return d.gm_naam + ", " +
-  //  cityData.get(d.gm_code); });
-}
+    var voronoi = d3.geom.voronoi()
+            .x(function(d) {
+                return x(d.date);
+            })
+            .y(function(d) {
+                return y(d.value);
+            })
+            .clipExtent([[-margin.left, -margin.top], [width + margin.right, height + margin.bottom]]);
+
+    var line = d3.svg.line()
+            .x(function(d) {
+                return x(d.date);
+            })
+            .y(function(d) {
+                return y(d.value);
+            });
+
+    var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.tsv("internetAdapted.csv", type, function(error, countries) {
+        x.domain(d3.extent(years));
+        y.domain([0, d3.max(countries, function(c) {
+                return d3.max(c.values, function(d) {
+                    return d.value;
+                });
+            })]).nice();
+
+        svg.append("g")
+                .attr("class", "axis axis--x")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.svg.axis()
+                        .scale(x)
+                        .orient("bottom")
+                        .tickFormat(formatxAxis));
+
+        svg.append("g")
+                .attr("class", "axis axis--y")
+                .call(d3.svg.axis()
+                        .scale(y)
+                        .orient("left")
+                        .ticks(10, "%"))
+                .append("text")
+                .attr("x", 4)
+                .attr("dy", ".32em")
+                .style("font-weight", "bold")
+                .text("Unemployment Rate");
+
+        svg.append("g")
+                .attr("class", "cities")
+                .selectAll("path")
+                .data(countries)
+                .enter().append("path")
+                .attr("d", function(d) {
+                    d.line = this;
+                    return line(d.values);
+                });
+
+        var focus = svg.append("g")
+                .attr("transform", "translate(-100,-100)")
+                .attr("class", "focus");
+
+        focus.append("circle")
+                .attr("r", 3.5);
+
+        focus.append("text")
+                .attr("y", -10);
+        var voronoiGroup = svg.append("g")
+                .attr("class", "voronoi");
+
+        voronoiGroup.selectAll("path")
+                .data(voronoi(d3.nest()
+                        .key(function(d) {
+                            return x(d.date) + "," + y(d.value);
+                        })
+                        .rollup(function(v) {
+                            return v[0];
+                        })
+                        .entries(d3.merge(countries.map(function(d) {
+                            return d.values;
+                        })))
+                        .map(function(d) {
+                            return d.values;
+                        })))
+                .enter().append("path")
+                .attr("d", function(d) {
+                    if (d !== undefined)
+                    {
+                        return "M" + d.join("L") + "Z";
+                    }
+                })
+                .datum(function(d) {
+                    if (d !== undefined)
+                    {
+                        return d.point;
+                    }
+                })
+                .on("mouseover", mouseover)
+                .on("mouseout", mouseout);
+
+        function mouseover(d) {
+            d3.select(d.city.line).classed("city--hover", true);
+            d.city.line.parentNode.appendChild(d.city.line);
+            focus.attr("transform", "translate(" + x(d.date) + "," + y(d.value) + ")");
+            focus.select("text").text(d.city.name);
+        }
+
+        function mouseout(d) {
+            d3.select(d.city.line).classed("city--hover", false);
+            focus.attr("transform", "translate(-100,-100)");
+        }
+    });
+
+    function type(d, i) {
+        years = Object.keys(d).filter(Number);
+        var country = {
+            countryName: d.countryName,
+            values: null
+        };
+        country.values = years.map(function(y) {
+            return {
+                city: country,
+                date: y,
+                value: Math.abs(d[y] / 100),
+                originalDate: Math.floor(y) + ".0",
+                originalValue: d[Math.floor(y) + ".0"] / 100
+            };
+        });
+        return country;
+    }
+
 </script>
-</body>
-</html>
