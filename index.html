@@ -1,16 +1,51 @@
+
 <!DOCTYPE html>
 <meta charset="utf-8">
+<title>Internet connectivity around the world</title>
 <style>
+@import url(maps.css);
 
-    body {
-        width: 960px;
-        margin: auto;
-        position: relative;
-    }
+.graticule {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .3;
+  stroke-width: .5px;
+}
 
-    svg {
-        font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
-    }
+.graticule.outline {
+  stroke: #333;
+  stroke-opacity: 1;
+  stroke-width: 1.5px;
+}
+
+path {
+ //stroke: #000;
+}
+
+.background {
+  stroke: none;
+  fill: #eee;
+}
+
+#leftColumn {
+  width: 55%;
+  float: left;
+}
+
+#rightColumnUp {
+  width: 45%;
+  height: 50%;
+  float: right;
+}
+
+#rightColumnDown {
+  width: 45%;
+  height: 50%;
+  float: right;
+}
+
+
+
 
     .axis path{
         stroke-width: 0;
@@ -60,35 +95,61 @@
         text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
     }
 
-    .voronoi path {
-        fill: none;
+    .pathVoronoi{
+      fill: none;
         pointer-events: all;
+
     }
 
+    .pathMap {
+      stroke: #000;
+    }
+
+    .voronoi > path {
+        //fill: none;
+        //pointer-events: all;
+    }
 
 </style>
-<div>
-    <!--empty div as otherwise the visualisation is not showing-->
+<div id="leftColumn">
+  <h1>Map</h1>
+  <div id="map"></div>
 </div>
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<div id="rightColumnUp"> 
+  <div id="lineGraph"></div>
+</div>
+<div id="rightColumnDown"> 
+  Grafiek </div>
+
+<script src="d3.min.js?3.1"></script>
+<script src="d3.geo.projection.min.js"></script>
+<script src="topojson.min.js?1.1.0"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
 <script>
+//Globals
+var countryNames;
+var worldData;
+var internetData;
 
-    var years;
-    var margin = {top: 20, right: 30, bottom: 30, left: 40},
-    width = 960 - margin.left - margin.right,
-            height = 500 - margin.top - margin.bottom;
 
+
+
+   var years;
+    var margin = {top: 20, right: 30, bottom: 30, left: 40};
+    var widthLine = document.getElementById("rightColumnUp").offsetWidth-margin.left -margin.right;
+    var heightLine = document.getElementById("rightColumnUp").offsetWidth*500/960 - margin.top - margin.bottom;
+console.log(widthLine + " X " + heightLine);
     var formatxAxis = d3.format('04d');
 
     //array which holds which countries are selected
     var selectedCountries = [];
 
     var x = d3.scale.linear()
-            .range([0, width]);
+            .range([0, widthLine]);
 
 
     var y = d3.scale.linear()
-            .range([height, 0]);
+            .range([heightLine, 0]);
 
     var color = d3.scale.category20();
 
@@ -99,7 +160,7 @@
             .y(function(d) {
                 return y(d.value);
             })
-            .clipExtent([[-margin.left, -margin.top], [width + margin.right, height + margin.bottom]]);
+            .clipExtent([[-margin.left, -margin.top], [widthLine + margin.right, heightLine + margin.bottom]]);
 
     var line = d3.svg.line()
             .x(function(d) {
@@ -109,13 +170,13 @@
                 return y(d.value);
             });
 
-    var svg = d3.select("body").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
+    var svg = d3.select("#lineGraph").append("svg")
+            .attr("width", widthLine + margin.left + margin.right)
+            .attr("height", heightLine + margin.top + margin.bottom)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    d3.tsv("internetAdapted.csv", type, function(error, countries) {
+ d3.tsv("internetAdapted.csv", type, function(error, countries) {
         x.domain(d3.extent(years));
         y.domain([0, d3.max(countries, function(c) {
                 return d3.max(c.values, function(d) {
@@ -125,11 +186,11 @@
 
         svg.append("g")
                 .attr("class", "axis axis--x")
-                .attr("transform", "translate(0," + height + ")")
+                .attr("transform", "translate(0," + heightLine + ")")
                 .call(d3.svg.axis()
                         .scale(x)
                         .orient("bottom")
-                        .tickSize(-height, 0, 0)
+                        .tickSize(-heightLine, 0, 0)
                         .tickFormat(formatxAxis));
 
 
@@ -138,7 +199,7 @@
                 .call(d3.svg.axis()
                         .scale(y)
                         .orient("left")
-                        .tickSize(-width, 0, 0)
+                        .tickSize(-widthLine, 0, 0)
                         .ticks(10, "%"))
                 .append("text")
                 .attr("x", 4)
@@ -149,8 +210,10 @@
         svg.append("g")
                 .attr("class", "cities")
                 .selectAll("path")
+                .attr("class", "pathVoronoi")
                 .data(countries)
                 .enter().append("path")
+                .attr("class", "pathVoronoi")
                 .attr("d", function(d) {
                     d.line = this;
                     return line(d.values);
@@ -173,6 +236,7 @@
                 .attr("class", "voronoi");
 
         voronoiGroup.selectAll("path")
+        .attr("class", "pathVoronoi")
                 .data(voronoi(d3.nest()
                         .key(function(d) {
                             return x(d.year) + "," + y(d.value);
@@ -187,6 +251,7 @@
                             return d.values;
                         })))
                 .enter().append("path")
+                .attr("class", "pathVoronoi")
                 .attr("d", function(d) {
                     if (d !== undefined)
                     {
@@ -319,5 +384,336 @@
         });
         return country;
     }
+
+//Max Code /\
+//Rik Code \/
+var isDorling = false;
+
+var widthMap = document.getElementById("leftColumn").offsetWidth,
+    heightMap = document.getElementById("leftColumn").offsetWidth/1020*600;
+
+var projection = d3.geo.mollweide()
+    .scale(180)
+    .translate([widthMap / 2, heightMap / 2]);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var force = d3.layout.force()
+    .size([widthMap, heightMap]);
+
+var graticule = d3.geo.graticule();
+
+var color = d3.scale.category10();
+
+var svgMap = d3.select("#map").append("svg")
+    .attr("width", widthMap)
+    .attr("height", heightMap + 50);
+
+svgMap.append("path")
+.attr("class", "pathMap")
+    .datum({type: "Sphere"})
+    .attr("class", "background")
+    .attr("d", path);
+
+queue()
+   .defer(d3.tsv, "internetAdaptedV2.csv")
+   .defer(d3.tsv, "world-country-names.tsv")
+   .defer(d3.json, "world-110m.json")
+   //.defer(d3.tsv, "cities-data.txt", function(d) { cityData.set(d.Code, +d.AUTO_TOT); })
+   .await(dataLoaded);
+
+function dataLoaded(error, loadedInternetData, loadedCountryNames, loadedWorldPolygons) {
+  console.log(internetData);
+  console.log(countryNames);
+  console.log(worldPolygons);
+  
+  //Store loaded data
+  countryNames = loadedCountryNames;
+  internetData = loadedInternetData;
+  worldData = loadedWorldPolygons;
+
+  //Initalize graphics
+  initializeWorldMap(worldData, internetData);
+  initializeLineGraph(internetData);
+
+}
+
+//function initializeWorldMap(polygons, internetData) {
+d3.json("world-110m.json", function(error, world) {
+  var neighbors = topojson.neighbors(world.objects.countries.geometries);
+  var land = {
+    type: "GeometryCollection",
+    geometries: polygons(world.objects.countries.geometries),
+  };
+
+
+  var neighbors = topojson.neighbors(land.geometries);
+  console.log(neighbors)
+  var nodes = topojson.feature(world, land).features.map(function(d) {
+    exterior(d.geometry);
+    var centroid = path.centroid(d.geometry);
+
+    return {
+      countryId: land.geometries[d.id-1].countryId,
+      x: centroid[0],
+      y: centroid[1],
+      ox: centroid[0],
+      oy: centroid[1],
+      geometry: d.geometry,
+      dorling: dorling(d.geometry)
+    };
+  });
+  console.log(nodes);
+  var links = d3.merge(neighbors.map(function(neighbors, i) {
+    var source = nodes[i];
+    return neighbors.map(function(target) {
+      target = nodes[target];
+      return {source: source, target: target, distance: source.dorling.radius + target.dorling.radius};
+    });
+  }));
+
+  mergeNodes(nodes);
+
+  var node = svgMap.selectAll("g")
+      .data(nodes)
+      .attr("id", function(data) { return d.id; })
+    .enter().insert("g", ".graticule")
+      .attr("transform", function(d) { return "translate(" + -d.x + "," + -d.y + ")"; })
+    .append("path")
+    .attr("class", "pathMap")
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+      .attr("d", function(d) { return path(d.geometry); }) 
+      .attr("name", function(d) { //console.log(d); 
+                                  for(var x = 0; x < countryNames.length; x++) { 
+                                    if(countryNames[x].id == d.countryId) {
+                                      return countryNames[x].name;
+                                    } 
+                                  } 
+                                  return "No Name"; 
+                                })     
+      .style("fill", function(d, i) { return color(d.color = d3.max(neighbors[i], function(n) { return nodes[n].color; }) + 1 | 0); })
+      .style("opacity", function(d) { return d.opacity; });
+
+  force.on("tick", function(e) {
+    var q = d3.geom.quadtree(nodes),
+        i = 0,
+        n = nodes.length;
+
+    var k = .5 * e.alpha;
+    nodes.forEach(function(o, i) {
+      o.y -= k * (o.y - o.oy);
+      o.x -= k * (o.x - o.ox);
+    });
+    while (++i < n) {
+      q.visit(collide(nodes[i]));
+    }
+
+    node.attr("transform", function(d) {
+      return "translate(" + d.x + "," + d.y + ")";
+    });
+  });
+
+  setTimeout(function() {
+    force
+        .gravity(0)
+        .charge(0)
+        .nodes(nodes)
+        .links(links)
+        .linkDistance(function(d) { return d.distance; })
+        .start();
+    //for (var i = 0; i < 50; ++i) force.tick();
+    //force.stop();
+
+    step();
+
+    function step() {
+      isDorling = !isDorling;
+      node.transition()
+          .duration(3000)
+          .attr("d", isDorling
+            ? function(d) { return "M" + d.dorling.coordinates.join("L") + "Z"; }
+            : function(d) { return path(d.geometry); })
+          .each("end", function(d) {
+            d = d.dorling;
+            d3.select(this).attr("d", pathCircle(d.centroid[0], d.centroid[1], d.radius));
+          });
+    }
+  }, 1);
+});
+
+function exterior(d) {
+  switch (d.type) {
+    case "Polygon": d.coordinates = [d.coordinates[0]]; break;
+    case "MultiPolygon": d.coordinates = [[d.coordinates[0][0]]]; break;
+  }
+  return d;
+}
+
+function projectRing(coordinates) {
+  var ring = [];
+  d3.geo.stream({type: "Polygon", coordinates: [coordinates]}, projection.stream({
+    point: function(x, y) { ring.push([x, y]); },
+    lineStart: noop,
+    lineEnd: noop,
+    polygonStart: noop,
+    polygonEnd: noop,
+    sphere: noop
+  }));
+  ring.push(ring[0]);
+  return ring;
+}
+
+function mergeNodes(nodes) {
+  console.log(nodes.length);
+  console.log(countryNames.length);
+  for(var i = 0; i < countryNames.length; i++) {
+    var regions = [];
+    for(var j = 0; j < nodes.length; j++) {
+      //console.log(nodes[j].countryId + " " + countryNames[i].id);
+        if(nodes[j].countryId == countryNames[i].id) {
+          regions.push(nodes[j]);
+        }
+    }
+    //console.log("---------");
+    var currentBiggest = null;
+    var smallerElements = [];
+    regions.forEach(function(r) {
+      if(!currentBiggest) {
+        currentBiggest = r;
+      }
+      else {
+        if(r.dorling.radius > currentBiggest.dorling.radius) {
+          //console.log(r.dorling.radius + " > " + currentBiggest.dorling.radius);
+          currentBiggest.dorling.radius = 0;
+          currentBiggest.opacity = 0;
+          smallerElements.push(currentBiggest);
+          currentBiggest=r;
+        }
+        else {
+          //console.log(r.dorling.radius + " < " + currentBiggest.dorling.radius);
+          r.dorling.radius = 0;
+          r.opacity = 0;
+          smallerElements.push(r);
+        }
+      }
+    });
+    if(currentBiggest) {
+      currentBiggest.opacity = 1;
+    }
+    //console.log(smallerElements.length +" | "+ regions.length);
+    //console.log("Before remove: " + nodes.length);
+    /*smallerElements.forEach(function(e) {
+
+      var index = nodes.indexOf(e);
+      console.log(e + " at index " + index);
+      nodes.splice(index, 1);
+      
+    });*/
+    //console.log("After remove: " + nodes.length);
+      
+    
+    //countryNames[i]
+      
+
+    
+  }
+}
+
+function dorling(d) {
+  switch (d.type) {
+    case "Polygon": return circle(projectRing(d.coordinates[0]));
+    case "MultiPolygon": return circle(projectRing(d.coordinates[0][0]));
+  }
+  return {radius: 0, coordinates: []};
+}
+
+// From Mike Bostock’s http://bl.ocks.org/3081153
+function circle(coordinates) {
+  var circle = [],
+      length = 0,
+      lengths = [length],
+      polygon = d3.geom.polygon(coordinates),
+      p0 = coordinates[0],
+      p1,
+      x,
+      y,
+      i = 0,
+      n = coordinates.length - 1;
+
+  // Compute the distances of each coordinate.
+  while (++i < n) {
+    p1 = coordinates[i];
+    x = p1[0] - p0[0];
+    y = p1[1] - p0[1];
+    lengths.push(length += Math.sqrt(x * x + y * y));
+    p0 = p1;
+  }
+
+  var area = polygon.area(),
+      radius = Math.sqrt(Math.abs(area) / Math.PI),
+      centroid = polygon.centroid(-1 / (6 * area)),
+      angleOffset = Math.atan2(coordinates[0][1] - centroid[1], coordinates[0][0] - centroid[0]),
+      angle,
+      i = -1,
+      k = 2 * Math.PI / length;
+
+  // Compute points along the circle’s circumference at equivalent distances.
+  while (++i < n) {
+    angle = angleOffset + lengths[i] * k;
+    circle.push([
+      centroid[0] + radius * Math.cos(angle),
+      centroid[1] + radius * Math.sin(angle)
+    ]);
+  }
+
+  return {coordinates: circle, radius: radius, centroid: centroid};
+}
+
+function polygons(geometries) {
+  var id = 0;
+  return d3.merge(geometries.map(function(geometry) {
+    return (geometry.type === "MultiPolygon" ? geometry.arcs : [geometry.arcs]).map(function(d) {
+      return {id: ++id, type: "Polygon", arcs: d, parent: geometry, countryId : geometry.id};
+    });
+  }));
+}
+
+// From http://mbostock.github.com/d3/talk/20111018/collision.html
+function collide(node) {
+  var r = node.radius,
+      nx1 = node.x - r,
+      nx2 = node.x + r,
+      ny1 = node.y - r,
+      ny2 = node.y + r;
+  return function(quad, x1, y1, x2, y2) {
+    if (quad.point && (quad.point !== node)) {
+      var x = node.x - quad.point.x,
+          y = node.y - quad.point.y,
+          l = Math.sqrt(x * x + y * y),
+          r = node.dorling.radius + quad.point.dorling.radius;
+      if (l < r) {
+        l = (l - r) / l * .5;
+        node.x -= x *= l;
+        node.y -= y *= l;
+        quad.point.x += x;
+        quad.point.y += y;
+      }
+    }
+    return x1 > nx2
+        || x2 < nx1
+        || y1 > ny2
+        || y2 < ny1;
+  };
+}
+
+function noop() {}
+
+function pathCircle(x, y, radius) {
+  return "M" + x + "," + (y + radius)
+      + "a" + radius + "," + radius + " 0 1,1 0," + -2 * radius
+      + "a" + radius + "," + radius + " 0 1,1 0," + 2 * radius
+      + "z";
+}
 
 </script>
