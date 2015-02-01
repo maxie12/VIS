@@ -848,11 +848,11 @@ function getConnectivity(country, year) {
   internetData.forEach(function(c) {
     //console.log(c.countryName);
     if(c.countryName == country) {
-      console.log(c);
+      //console.log(c);
       for(var a in c.values) {
         //console.log(c.values[a].year);
         if(c.values[a].year == year) {
-          console.log("AAAAAAAAAAAA" + c.values[a].value);
+          //console.log("AAAAAAAAAAAA" + c.values[a].value);
           returnValue =  c.values[a].value;
         }
         //console.log(a);
