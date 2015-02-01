@@ -68,14 +68,17 @@ path {
     .country--hover {
         stroke: #FF0000;
         stroke-width: 1.75px;
+        z-index: 10;
     }
     .country--selected {
         stroke: #00FF00;
         stroke-width: 1.75px;
+        z-index: 10;
     }
     .country--hoverselected {
         stroke: #000000;
         stroke-width: 1.75px;
+        z-index: 10;
     }
 
     .textbox{  
@@ -110,10 +113,35 @@ path {
         //pointer-events: all;
     }
 
+    .focus {
+      background: fill;
+      background-color: #242424;
+    }
+
 </style>
 <div id="leftColumn">
   <h1>Map</h1>
   <div id="map"></div>
+  <br />
+  <br />
+  <br />
+  <br />
+  <select id="yearSelect" onchange="yearSelect()">
+    <option value="1990.0">1990</option>
+    <option value="1991.0">1991</option>
+    <option value="1992.0">1992</option>
+    <option value="1993.0">1993</option>
+    <option value="1994.0">1994</option>
+    <option value="1995.0">1995</option>
+    <option value="1996.0">1996</option>
+    <option value="1997.0">1997</option>
+    <option value="1998.0">1998</option>
+    <option value="1999.0">1999</option>
+    <option value="2000.0">2000</option>
+    <option value="2001.0">2001</option>
+    <option value="2002.0">2002</option>
+  </select>
+
 </div>
 <div id="rightColumnUp"> 
   <div id="lineGraph"></div>
@@ -363,7 +391,8 @@ function initializeLineGraph(worldData) {
         focus.append("textbox")
                 .attr("y", -20)
                 .attr("width", "20px")
-                .attr("height", "20px");
+                .attr("height", "20px")
+                .attr("background-color", "#242424");
 
         var voronoiGroup = svg.append("g")
                 .attr("class", "voronoi");
@@ -457,6 +486,8 @@ function initializeLineGraph(worldData) {
                 addSelectedCountry(countryName);
             }
         }
+
+}
         function removeSelectedCountry(countryName)
         {
             var index = selectedCountries.indexOf(countryName);
@@ -500,7 +531,7 @@ function initializeLineGraph(worldData) {
                 return true;
             }
         }
-}
+
 
 function initializeWorldMap(worldData) {
   var neighbors = topojson.neighbors(worldData.objects.countries.geometries);
@@ -565,7 +596,8 @@ function initializeWorldMap(worldData) {
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
       .attr("d", function(d) { return path(d.geometry); }) 
       .attr("name", function(d) { return getCountryNameFromId(d.countryId); })
-      .on('hover', function(d) { hoverGlobal(getCountryNameFromId(d.countryId));})
+      .on('mouseover', function(d) { mouseOverGlobal(getCountryNameFromId(d.countryId));})
+      .on('mouseout', function(d) { mouseOutGlobal(getCountryNameFromId(d.countryId));})
       .on('click', function(d, i) { toggleCountry(getCountryNameFromId(d.countryId)); })     
       .style("fill", function(d, i) { return color(d.color = d3.max(neighbors[i], function(n) { return nodes[n].color; }) + 1 | 0); })
       .style("opacity", function(d) { return d.opacity; });
@@ -729,8 +761,8 @@ function circle(coordinates, newRadius) {
     p0 = p1;
   }
   var area = polygon.area(),
-      //radius = newRadius,
-      radius = Math.sqrt(Math.abs(area) / Math.PI),
+      radius = Math.sqrt(newRadius)*20,
+      //radius = Math.sqrt(Math.abs(area) / Math.PI),
       centroid = polygon.centroid(-1 / (6 * area)),
       angleOffset = Math.atan2(coordinates[0][1] - centroid[1], coordinates[0][0] - centroid[0]),
       angle,
@@ -837,11 +869,66 @@ function changeAllRadius(year) {
 function toggleCountry(countryName) {
   if(selectedCountries.indexOf(countryName) >= 0) {
     selectedCountries.splice(selectedCountries.indexOf(countryName), 1);
+                    d3.select(d.country.line).classed("country--hover", false);
+    d3.select(findCountry(countryName).line).classed("country--selected", true)
   }
   else {
     selectedCountries.push(countryName);
+    d3.select(findCountry(countryName).line).classed("country--selected", false)
   }
+  drawBubbleChart(internetData);
+  console.log(selectedCountries);
 }
 
+function mouseOverGlobal(countryName) {
+  //if(findCountry(countryName)){
+  console.log("Hovering " + countryName + findCountry(countryName));
+                d3.select(findCountry(countryName).line).classed("country--hover", true);
+  //}
+}
+
+function mouseOutGlobal(countryName) {
+    //if(countainsCountry(countryName)){
+
+  console.log("Hovering " + countryName + findCountry(countryName));
+                d3.select(findCountry(countryName).line).classed("country--hover", false);
+      //        }
+}
+
+
+function yearSelect() {
+  var x = document.getElementById("yearSelect").value;
+  currentYear = x;
+  resetWorldMap();
+  initializeWorldMap(worldData);
+}
+
+function resetWorldMap() {
+  isDorling = false;
+  widthMap = document.getElementById("leftColumn").offsetWidth;
+  heightMap = document.getElementById("leftColumn").offsetWidth/1020*600;
+  projection = d3.geo.mollweide()
+    .scale(180)
+    .translate([widthMap / 2, heightMap / 2]);
+
+   path = d3.geo.path()
+    .projection(projection);
+
+  force = d3.layout.force()
+    .size([widthMap, heightMap]);
+
+  graticule = d3.geo.graticule();
+  document.getElementById('map').innerHTML = "";
+  svgMap = d3.select("#map").append("svg")
+    .attr("width", widthMap)
+    .attr("height", heightMap + 50);
+
+svgMap.append("path")
+.attr("class", "pathMap")
+    .datum({type: "Sphere"})
+    .attr("class", "background")
+    .attr("d", path);
+
+}
 
 </script>
