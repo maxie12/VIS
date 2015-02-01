@@ -114,13 +114,13 @@ path {
     }
 
     .focus {
-      background: fill;
+      background: #242424;
       background-color: #242424;
     }
 
 </style>
 <div id="leftColumn">
-  <h1>Map</h1>
+  <h1>Internet Connectivity in the world</h1>
   <div id="map"></div>
   <br />
   <br />
@@ -139,7 +139,7 @@ path {
     <option value="1999.0">1999</option>
     <option value="2000.0">2000</option>
     <option value="2001.0">2001</option>
-    <option value="2002.0">2002</option>
+    <option value="2002.0" selected="selected">2002</option>
   </select>
 
 </div>
@@ -163,7 +163,11 @@ var internetData;
 
 var currentYear = "2002.0";
 
+var linearColorScale = d3.scale.linear()
+        .domain([0.0, 100.0])
+        .range([0, 1])
 
+var colorInterpolator = d3.interpolateHsl("white", "green");
 
    var years;
     var margin = {top: 20, right: 30, bottom: 30, left: 40};
@@ -510,6 +514,18 @@ function initializeLineGraph(worldData) {
         }
 
         function findCountry(countryName)
+        {
+            var path = d3.select("g.cities").selectAll("path").filter(function(d) {
+                if (d.countryName === countryName)
+                {
+                    return d;
+                }
+            })[0][0];
+            var country = path.__data__;
+            return country;
+        }
+
+        function findCountryElement (countryName)
         {
             var path = d3.select("g.cities").selectAll("path").filter(function(d) {
                 if (d.countryName === countryName)
@@ -869,12 +885,12 @@ function changeAllRadius(year) {
 function toggleCountry(countryName) {
   if(selectedCountries.indexOf(countryName) >= 0) {
     selectedCountries.splice(selectedCountries.indexOf(countryName), 1);
-                    d3.select(d.country.line).classed("country--hover", false);
-    d3.select(findCountry(countryName).line).classed("country--selected", true)
+                    d3.select(findCountry(countryName).line).classed("country--hover", false);
+    d3.select(findCountry(countryName).line).classed("country--selected", false);
   }
   else {
     selectedCountries.push(countryName);
-    d3.select(findCountry(countryName).line).classed("country--selected", false)
+    d3.select(findCountry(countryName).line).classed("country--selected", true);
   }
   drawBubbleChart(internetData);
   console.log(selectedCountries);
@@ -890,7 +906,7 @@ function mouseOverGlobal(countryName) {
 function mouseOutGlobal(countryName) {
     //if(countainsCountry(countryName)){
 
-  console.log("Hovering " + countryName + findCountry(countryName));
+  //console.log("Hovering " + countryName + findCountry(countryName));
                 d3.select(findCountry(countryName).line).classed("country--hover", false);
       //        }
 }
