@@ -896,6 +896,7 @@
             d3.select(findCountry(countryName).line).classed("country--hover", true);
             //toggle for country
             var path = findCountryMap(d.countryId);
+            //give the country on the map an outline
             path.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': '#FF0000'});
         }
         var globalId;//used for ugly hack
