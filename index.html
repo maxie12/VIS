@@ -883,6 +883,8 @@ function changeAllRadius(year) {
 }
 
 function toggleCountry(countryName) {
+    //TODO Set color scheme: need variable that maps countries to specific color
+    //toggling for line chart
   if(selectedCountries.indexOf(countryName) >= 0) {
     selectedCountries.splice(selectedCountries.indexOf(countryName), 1);
                     d3.select(findCountry(countryName).line).classed("country--hover", false);
@@ -892,11 +894,17 @@ function toggleCountry(countryName) {
     selectedCountries.push(countryName);
     d3.select(findCountry(countryName).line).classed("country--selected", true);
   }
+  //toggling for bubble chart
   drawBubbleChart(internetData);
+  //TODO toggling for map
+  //adds an outline to the circle, should not change the mechanics of force layout
+  //.style({'stroke-opacity':1,'stroke-width':'4px','stroke':'#FF0000'});;
+
   console.log(selectedCountries);
 }
 
 function mouseOverGlobal(countryName) {
+    //Toggle for line graph
   //if(findCountry(countryName)){
   console.log("Hovering " + countryName + findCountry(countryName));
                 d3.select(findCountry(countryName).line).classed("country--hover", true);
@@ -904,6 +912,7 @@ function mouseOverGlobal(countryName) {
 }
 
 function mouseOutGlobal(countryName) {
+    //toggle for line graph
     //if(countainsCountry(countryName)){
 
   //console.log("Hovering " + countryName + findCountry(countryName));
