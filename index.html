@@ -140,6 +140,16 @@
         <option value="2000.0">2000</option>
         <option value="2001.0">2001</option>
         <option value="2002.0" selected="selected">2002</option>
+        <option value="2003.0">2003</option>
+        <option value="2004.0">2004</option>
+        <option value="2005.0">2005</option>
+        <option value="2006.0">2006</option>
+        <option value="2007.0">2007</option>
+        <option value="2008.0">2008</option>
+        <option value="2009.0">2009</option>
+        <option value="2010.0">2010</option>
+        <option value="2011.0">2011</option>
+        <option value="2012.0">2012</option>
     </select>
 
 </div>
@@ -219,6 +229,12 @@
 
         //Max Code /\
         var svgBubble = dimple.newSvg("#bubbleChart", document.getElementById("rightColumnDown").offsetWidth, document.getElementById("rightColumnUp").offsetWidth * 400 / 590);
+
+        d3.selection.prototype.moveToFront = function() {
+          return this.each(function(){
+          this.parentNode.appendChild(this);
+          });
+        };
         //Rik Code \/
         var isDorling = false;
         var widthMap = document.getElementById("leftColumn").offsetWidth,
@@ -356,6 +372,7 @@
                         d.line = this;
                         return line(d.values);
                     });
+
             var focus = svg.append("g")
                     .attr("transform", "translate(-100,-100)")
                     .attr("class", "focus");
@@ -403,6 +420,7 @@
                     .on("mouseout", mouseout)
                     .on("mousedown", mouseclick);
             function mouseover(d) {
+
                 var countryName = d.country.countryName;
                 if (countainsCountry(countryName))
                 {
@@ -414,6 +432,7 @@
                     d3.select(d.country.line).classed("country--hoverselected", false);
                     d3.select(d.country.line).classed("country--hover", true);
                     d3.select(d.country.line).classed("country--selected", false);
+                    d3.select(d.country.line).moveToFront();
                 }
 
                 focus.attr("transform", "translate(" + x(d.year) + "," + y(d.value) + ")");
@@ -452,10 +471,12 @@
                     //country was no in array yet, so we select it
                     console.log("not contained");
                     removeSelectedCountry(countryName)
+
                 } else {
                     //country was in array, so we remove it
                     console.log("Contained");
                     addSelectedCountry(countryName);
+                    d3.select(findCountryElement(countryName)).moveToFront();
                 }
             }
 
@@ -476,6 +497,7 @@
             var country = findCountry(countryName);
             //color the line
             d3.select(country.line).classed("country--selected", true);
+            d3.select(findCountryElement(countryName)).moveToFront();
             drawBubbleChart(internetData);
         }
 
@@ -898,6 +920,7 @@
                 selectedCountries.push(countryName);
                 d3.select(findCountry(countryName).line).classed("country--selected", true);
                 d3.select(findCountry(countryName).line).style("stroke", color(getCountryColor(countryName)));
+                d3.select(findCountryElement(countryName).line).moveToFront();
             }
             //toggling for bubble chart
             drawBubbleChart(internetData);
@@ -915,8 +938,10 @@
             d3.select(findCountry(countryName).line).classed("country--hover", true);
             //toggle for country
             var path = findCountryMap(d.countryId);
+            console.log(path);
             //give the country on the map an outline
             path.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': '#FF0000'});
+            d3.select(findCountryElement(countryName).line).moveToFront();
         }
         var globalId;//used for ugly hack
         function findCountryMap(countryId) {
