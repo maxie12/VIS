@@ -153,8 +153,8 @@
     <script src="d3.min.js?3.1"></script>
     <script src="d3.geo.projection.min.js"></script>
     <script src="topojson.min.js?1.1.0"></script>
-    <script src="http://d3js.org/queue.v1.min.js"></script>
-    <script src="http://dimplejs.org/dist/dimple.v2.1.2.min.js"></script>
+    <script src="d3.queue.js"></script>
+    <script src="dimple.v2.1.2.js"></script>
     <script>
         //Globals
         var countryNames;
@@ -170,7 +170,7 @@
         var margin = {top: 20, right: 30, bottom: 30, left: 40};
         var widthLine = document.getElementById("rightColumnUp").offsetWidth - margin.left - margin.right;
         var heightLine = document.getElementById("rightColumnUp").offsetWidth * 500 / 960 - margin.top - margin.bottom;
-        console.log(widthLine + " X " + heightLine);
+        //console.log(widthLine + " X " + heightLine);
         var formatxAxis = d3.format('04d');
         //array which holds which countries are selected
         var selectedCountries = [];
@@ -247,9 +247,7 @@
                 //.defer(d3.tsv, "cities-data.txt", function(d) { cityData.set(d.Code, +d.AUTO_TOT); })
                 .await(dataLoaded);
         function dataLoaded(error, loadedInternetData, loadedCountryNames, loadedWorldPolygons) {
-            console.log(loadedInternetData);
-            console.log(loadedCountryNames);
-            console.log(loadedWorldPolygons);
+
             //Store loaded data
             countryNames = loadedCountryNames;
             internetData = loadedInternetData;
@@ -259,13 +257,13 @@
             initializeLineGraph(internetData);
             drawBubbleChart(internetData);
         }
-
+        var myChart;
         function drawBubbleChart(internetData) {
             document.getElementById('bubbleChart').getElementsByTagName('svg')[0].innerHTML = ""
             data = extractData(internetData);
             //console.log("Data: "+data);
             //data = dimple.filterData(internetData, "countryName", selectedCountries);
-            var myChart = new dimple.chart(svgBubble, data);
+            myChart = new dimple.chart(svgBubble, data);
             //console.log(data);
             myChart.setBounds(60, 30, 500, 330)
             var x = myChart.addCategoryAxis("x", "Year");
@@ -273,11 +271,15 @@
             myChart.addMeasureAxis("y", "Growth");
             myChart.addSeries("Country", dimple.plot.bubble);
             myChart.addLegend(140, 10, 360, 20, "right");
+            //myChart.draw();
+            myChart.data.forEach(function(d) {
+              myChart.assignColor(d.Country, d.Color);
+            });
             myChart.draw();
         }
 
         function extractData(internetData) {
-            console.log(internetData);
+            //console.log(internetData);
             data = [];
             internetData.forEach(function (c) {
                 if (selectedCountries.indexOf(c.countryName) >= 0) {
@@ -290,7 +292,7 @@
                         }
                         else {
                             var connectivityThisYear = parseFloat(getConnectivity(c.countryName, i + ".0"));
-                            console.log(connectivityThisYear);
+                            //console.log(connectivityThisYear);
                             if (connectivityThisYear == 0) {
                                 connectivityThisYear = 0.0001;
                             }
@@ -298,12 +300,16 @@
                             if (connectivityLastYear == 0) {
                                 connectivityLastYear = 0.0001;
                             }
-                            console.log(connectivityThisYear - connectivityLastYear);
+                            //console.log(connectivityThisYear - connectivityLastYear);
                             obj.Growth = connectivityThisYear - connectivityLastYear;
                         }
                         obj.Connectivity = c[i];
+                        obj.Color = color(getCountryColor(c.countryName));
+                        console.log(color(getCountryColor(c.countryName)));
                         data.push(obj);
                     }
+                   
+
 
                 }
 
@@ -846,7 +852,7 @@
                 }
             });
             if (returnValue === "invalid") {
-                console.log(country + " in year " + year + " not found");
+                //console.log(country + " in year " + year + " not found");
                 return 0;
             }
             else {
@@ -868,6 +874,18 @@
 
         }
 
+        function getCountryColor(countryName) {
+          var path = d3.select("#map").select("svg").selectAll("g").select("path").filter(function (d) {
+            //console.log(d);
+            if(getCountryNameFromId(d.countryId) === countryName) {
+              this.color = d.color;
+              return this;
+
+            }
+          });
+          return path[0][0].color;
+        }
+
         function toggleCountry(d, countryName) {
             //TODO Set color scheme: need variable that maps countries to specific color
             //toggling for line chart
@@ -879,6 +897,7 @@
             else {
                 selectedCountries.push(countryName);
                 d3.select(findCountry(countryName).line).classed("country--selected", true);
+                d3.select(findCountry(countryName).line).style("stroke", color(getCountryColor(countryName)));
             }
             //toggling for bubble chart
             drawBubbleChart(internetData);
@@ -918,6 +937,8 @@
 
             //console.log("Hovering " + countryName + findCountry(countryName));
             d3.select(findCountry(countryName).line).classed("country--hover", false);
+            var path = findCountryMap(d.countryId);
+            path.style({'stroke-opacity': 1, 'stroke-width': '1px', 'stroke': '#000000'});
             //        }
         }
 
