@@ -163,6 +163,7 @@
         var linearColorScale = d3.scale.linear()
                 .domain([0.0, 100.0])
                 .range([0, 1])
+        var hoverCountry;
 
         var colorInterpolator = d3.interpolateHsl("white", "green");
         var years;
@@ -342,32 +343,70 @@
             initializeLineGraph(internetData);
             drawBubbleChart(internetData);
         }
+
         var myChart;
+        var bubbleCount = 0;
         function drawBubbleChart(internetData) {
+
             document.getElementById('bubbleChart').getElementsByTagName('svg')[0].innerHTML = ""
             data = extractData(internetData);
-            //console.log("Data: "+data);
             //data = dimple.filterData(internetData, "countryName", selectedCountries);
             myChart = new dimple.chart(svgBubble, data);
-            //console.log(data);
             myChart.setBounds(60, 30, 500, 330)
             var x = myChart.addCategoryAxis("x", "Year");
             x.addOrderRule("Year");
             myChart.addMeasureAxis("y", "Growth");
-            myChart.addSeries("Country", dimple.plot.bubble);
+            mySeries = myChart.addSeries("Country", dimple.plot.bubble);
+
             myChart.addLegend(140, 10, 360, 20, "right");
-            //myChart.draw();
             myChart.data.forEach(function (d) {
-                myChart.assignColor(d.Country, getCountryColor(d.Country));
+                if (d.Country == hoverCountry)
+                {
+                    //TODO use a better stroke
+                    if (isCountrySelected(d.Country)) {
+                        myChart.assignColor(d.Country, "black");
+                    } else {
+                        myChart.assignColor(d.Country, "red");
+                    }
+                } else {
+                    myChart.assignColor(d.Country, getCountryColor(d.Country));
+                }
             });
+            //TODO set mouseOver to also mouseOver other 2 graphs
             myChart.draw();
+
+            mySeries.shapes.on("mouseover", function (e) {
+                console.log("mouse on dimple");
+                dimple._showPointTooltip(e, this, myChart, mySeries);
+                var countryName = e.aggField[0];
+                if (bubbleCount <= 0)
+                {
+                    bubbleCount = 2;
+                    mouseOverGlobal(countryName, true);
+                } else {
+                    mouseOverGlobal(countryName, false);
+                }
+            });
+            mySeries.shapes.on("mouseleave", function (e) {
+                console.log("Mouse leaving dimple")
+                dimple._removeTooltip(e, this, myChart, mySeries);
+                var countryName = e.aggField[0];
+                bubbleCount--;
+                if (bubbleCount <= 0)
+                {
+                    mouseOutGlobal(countryName, true);
+                } else {
+                    mouseOutGlobal(countryName, false);
+                }
+            });
         }
 
+        //extracts the data for the bubble chart
         function extractData(internetData) {
             //console.log(internetData);
             data = [];
             internetData.forEach(function (c) {
-                if (selectedCountries.indexOf(c.countryName) >= 0) {
+                if ((selectedCountries.indexOf(c.countryName) >= 0) || c.countryName == hoverCountry) {
                     for (var i = 1990.0; i < 2013.0; i++) {
                         var obj = {};
                         obj.Year = i;
@@ -390,7 +429,6 @@
                         }
                         obj.Connectivity = c[i];
                         obj.Color = color(getCountryColor(c.countryName));
-                        console.log(color(getCountryColor(c.countryName)));
                         data.push(obj);
                     }//end of i loop
                 }
@@ -526,7 +564,7 @@
         }
 
 
-        function countainsCountry(countryName)
+        function isCountrySelected(countryName)
         {
             var index = selectedCountries.indexOf(countryName);
             if (index === -1)
@@ -679,67 +717,80 @@
             console.log("Clicked " + countryName);
             var lineCountry = findLineCountry(countryName);
             var worldCountry = findMapCountry(countryName);
-            if (countainsCountry(countryName))
+            if (isCountrySelected(countryName))
             {
                 //was contained
-
                 selectedCountries.splice(selectedCountries.indexOf(countryName), 1);
                 d3.select(lineCountry.line).classed("country--active", false);
                 d3.select(lineCountry.line).style("stroke", "lightgray");
                 worldCountry.style({'stroke-opacity': 1, 'stroke-width': '1px', 'stroke': "black"});
                 unsetColor(countryName);
-
             }
             else
             {
                 var color = getAndSetAvailableColor(countryName);
-
                 //was not contained yet
                 selectedCountries.push(countryName);
                 d3.select(lineCountry.line).classed("country--selected", true);
                 d3.select(lineCountry.line).style("stroke", color);
                 d3.select(lineCountry.line).moveToFront();
-                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': color});
+                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '3px', 'stroke': color});
             }
-            //toggling for bubble chart
+            hoverCountry = null;
             drawBubbleChart(internetData);
         }
 
-        function mouseOverGlobal(countryName) {
-            console.log("Hovering " + countryName);
-            var lineCountry = findLineCountry(countryName);
-            var worldCountry = findMapCountry(countryName);
-            if (countainsCountry(countryName))
+        function mouseOverGlobal(countryName, redrawBubble) {
+            //setFromBubble to false it is was not defined
+            redrawBubble = (typeof redrawBubble !== 'undefined' ? redrawBubble : true);
+            if (hoverCountry == null)
             {
-                //country was selected, update borders to black
-                d3.select(lineCountry.line).style("stroke", "black");
-                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '6px', 'stroke': "black"});
-            } else {
-                d3.select(lineCountry.line).classed("country--active", true);
-                d3.select(lineCountry.line).style("stroke", "red");
-                d3.select(lineCountry.line).moveToFront();
-                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': "red"});
+                console.log("Hovering " + countryName);
+                var lineCountry = findLineCountry(countryName);
+                var worldCountry = findMapCountry(countryName);
+                if (isCountrySelected(countryName))
+                {
+                    //country was selected, update borders to black
+                    d3.select(lineCountry.line).style("stroke", "black");
+                    worldCountry.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': "black"});
+                } else {
+                    d3.select(lineCountry.line).classed("country--active", true);
+                    d3.select(lineCountry.line).style("stroke", "red");
+                    d3.select(lineCountry.line).moveToFront();
+                    worldCountry.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': "red"});
+                }
+
+                hoverCountry = countryName;
+                if (redrawBubble == true)
+                {
+                    drawBubbleChart(internetData);
+                }
             }
 
-            //TODO Update bubble
         }
 
-        function mouseOutGlobal(countryName) {
+        function mouseOutGlobal(countryName, redrawBubble) {
+            //setFromBubble to false it is was not defined
+            redrawBubble = (typeof redrawBubble !== 'undefined' ? redrawBubble : true);
+
             console.log("Left  " + countryName);
             var lineCountry = findLineCountry(countryName);
             var worldCountry = findMapCountry(countryName);
-            if (countainsCountry(countryName))
+            if (isCountrySelected(countryName))
             {
                 d3.select(lineCountry.line).classed("country--active", true);
                 d3.select(lineCountry.line).style("stroke", getCountryColor(countryName));
                 worldCountry.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': getCountryColor(countryName)});
-
             } else {
                 d3.select(lineCountry.line).classed("country--active", false);
                 d3.select(lineCountry.line).style("stroke", "lightgray");
                 worldCountry.style({'stroke-opacity': 1, 'stroke-width': '1px', 'stroke': "black"});
             }
-            //todo update bubble
+            hoverCountry = null;
+            if (redrawBubble == true)
+            {
+                drawBubbleChart(internetData);
+            }
         }
 
         function findMapCountry(countryName) {
