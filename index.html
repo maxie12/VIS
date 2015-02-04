@@ -65,16 +65,7 @@
     }
 
 
-    .country--hover {
-        stroke-width: 1.75px;
-        z-index: 10;
-    }
-    .country--selected {
-        stroke-width: 1.75px;
-        z-index: 10;
-    }
-    .country--hoverselected {
-        stroke: #000000;
+    .country--active {
         stroke-width: 1.75px;
         z-index: 10;
     }
@@ -186,7 +177,7 @@
         var countryColors = [{
                 countryName: null,
                 color: "#377eb8"
-            },{
+            }, {
                 countryName: null,
                 color: "#984ea3"
             }, {
@@ -202,14 +193,7 @@
                 countryName: null,
                 color: "#f781bf"
             }];
-
-
-
-
-
-
-
-
+        //TODO More colors?
 
         var x = d3.scale.linear()
                 .range([0, widthLine]);
@@ -217,18 +201,18 @@
                 .range([heightLine, 0]);
         var color = d3.scale.category20();
         var voronoi = d3.geom.voronoi()
-                .x(function(d) {
+                .x(function (d) {
                     return x(d.year);
                 })
-                .y(function(d) {
+                .y(function (d) {
                     return y(d.value);
                 })
                 .clipExtent([[-margin.left, -margin.top], [widthLine + margin.right, heightLine + margin.bottom]]);
         var line = d3.svg.line()
-                .x(function(d) {
+                .x(function (d) {
                     return x(d.year);
                 })
-                .y(function(d) {
+                .y(function (d) {
                     return y(d.value);
                 });
         var svg = d3.select("#lineGraph").append("svg")
@@ -243,7 +227,7 @@
                 countryName: d.countryName,
                 values: null
             };
-            country.values = years.map(function(y) {
+            country.values = years.map(function (y) {
                 return {
                     country: country,
                     year: y,
@@ -260,13 +244,13 @@
         //Max Code /\
         var svgBubble = dimple.newSvg("#bubbleChart", document.getElementById("rightColumnDown").offsetWidth, document.getElementById("rightColumnUp").offsetWidth * 400 / 590);
 
-        d3.selection.prototype.moveToFront = function() {
-            return this.each(function() {
+        d3.selection.prototype.moveToFront = function () {
+            return this.each(function () {
                 this.parentNode.appendChild(this);
             });
         };
-
-        function getAndSetAvailableColor(name)
+        //returns the color assigned to coutnryName
+        function getAndSetAvailableColor(countryName)
         {
             //some returns as soon as something returns true
             for (var i = 0; i < countryColors.length; i++)
@@ -274,27 +258,27 @@
                 var cc = countryColors[i];
                 if (cc.countryName == null)
                 {
-                    cc.countryName = name;
+                    cc.countryName = countryName;
                     return cc.color;
                 }
             }
             return false;
         }
-
-        function unsetColor(name)
+        //frees up the color assigned to countryName
+        function unsetColor(countryName)
         {
             //some returns as soon as something returns true
             for (var i = 0; i < countryColors.length; i++)
             {
                 var cc = countryColors[i];
-                if (cc.countryName == name)
+                if (cc.countryName == countryName)
                 {
                     cc.countryName = null;
                 }
             }
         }
 
-        function getAvailableColor()
+        function getNextAvailableColor()
         {
             //some returns as soon as something returns true
             for (var i = 0; i < countryColors.length; i++)
@@ -349,7 +333,6 @@
                 //.defer(d3.tsv, "cities-data.txt", function(d) { cityData.set(d.Code, +d.AUTO_TOT); })
                 .await(dataLoaded);
         function dataLoaded(error, loadedInternetData, loadedCountryNames, loadedWorldPolygons) {
-
             //Store loaded data
             countryNames = loadedCountryNames;
             internetData = loadedInternetData;
@@ -374,7 +357,7 @@
             myChart.addSeries("Country", dimple.plot.bubble);
             myChart.addLegend(140, 10, 360, 20, "right");
             //myChart.draw();
-            myChart.data.forEach(function(d) {
+            myChart.data.forEach(function (d) {
                 myChart.assignColor(d.Country, getCountryColor(d.Country));
             });
             myChart.draw();
@@ -383,7 +366,7 @@
         function extractData(internetData) {
             //console.log(internetData);
             data = [];
-            internetData.forEach(function(c) {
+            internetData.forEach(function (c) {
                 if (selectedCountries.indexOf(c.countryName) >= 0) {
                     for (var i = 1990.0; i < 2013.0; i++) {
                         var obj = {};
@@ -409,12 +392,8 @@
                         obj.Color = color(getCountryColor(c.countryName));
                         console.log(color(getCountryColor(c.countryName)));
                         data.push(obj);
-                    }
-
-
-
+                    }//end of i loop
                 }
-
             });
             return data;
         }
@@ -422,8 +401,8 @@
 
         function initializeLineGraph(worldData) {
             x.domain(d3.extent(years));
-            y.domain([0, d3.max(worldData, function(c) {
-                    return d3.max(c.values, function(d) {
+            y.domain([0, d3.max(worldData, function (c) {
+                    return d3.max(c.values, function (d) {
                         return d.value;
                     });
                 })]).nice();
@@ -454,7 +433,7 @@
                     .data(worldData)
                     .enter().append("path")
                     .attr("class", "pathVoronoi")
-                    .attr("d", function(d) {
+                    .attr("d", function (d) {
                         d.line = this;
                         return line(d.values);
                     });
@@ -476,125 +455,67 @@
             voronoiGroup.selectAll("path")
                     .attr("class", "pathVoronoi")
                     .data(voronoi(d3.nest()
-                            .key(function(d) {
+                            .key(function (d) {
                                 return x(d.year) + "," + y(d.value);
                             })
-                            .rollup(function(v) {
+                            .rollup(function (v) {
                                 return v[0];
                             })
-                            .entries(d3.merge(worldData.map(function(d) {
+                            .entries(d3.merge(worldData.map(function (d) {
                                 return d.values;
                             })))
-                            .map(function(d) {
+                            .map(function (d) {
                                 return d.values;
                             })))
                     .enter().append("path")
                     .attr("class", "pathVoronoi")
-                    .attr("d", function(d) {
+                    .attr("d", function (d) {
                         if (d !== undefined)
                         {
                             return "M" + d.join("L") + "Z";
                         }
                     })
-                    .datum(function(d) {
+                    .datum(function (d) {
                         if (d !== undefined)
                         {
                             return d.point;
                         }
                     })
-                    .on("mouseover", mouseOver)
-                    .on("mouseout", mouseout)
-                    .on("mousedown", mouseclick);
-            function mouseOver(d) {
+                    .on("mouseover", mouseOverLine)
+                    .on("mouseout", mouseOutLine)
+                    .on("mousedown", mouseClickLine);
 
+            function mouseOverLine(d) {
                 var countryName = d.country.countryName;
-                if (countainsCountry(countryName))
-                {
-                    //reset color
-                    d3.select(d.country.line).classed("country--hoverselected", true);
-                    d3.select(d.country.line).classed("country--hover", false);
-                    d3.select(d.country.line).classed("country--selected", false);
-                    //is already to the front, so no need to move
-                } else {
-                    d3.select(d.country.line).classed("country--hoverselected", false);
-                    d3.select(d.country.line).classed("country--hover", true);
-                    d3.select(d.country.line).classed("country--selected", false);
-                    d3.select(d.country.line).style("stroke", getAvailableColor());
-                    d3.select(d.country.line).moveToFront();
-                }
+                mouseOverGlobal(countryName);
 
+                //show tooltip
                 focus.attr("transform", "translate(" + x(d.year) + "," + y(d.value) + ")");
                 focus.select("text").html("country: " + countryName + "\r\n" +
                         "Year " + d.originalYear.substring(0, 4) + "\r\n" +
                         "internetConnectity: " + (Math.round(d.originalValue * 100) / 100) + "%");
                 //TODO Get textBox to work so we display this properly
             }
-            function mouseout(d) {
+            function mouseOutLine(d) {
                 var countryName = d.country.countryName;
-                d3.select(d.country.line).classed("country--hover", false);
-                if (countainsCountry(countryName))
-                {
-                    d3.select(d.country.line).classed("country--hoverselected", false);
-                    d3.select(d.country.line).classed("country--hover", false);
-                    d3.select(d.country.line).classed("country--selected", true);
-                    d3.select(d.country.line).style("stroke", getCountryColor(countryName));
-
-
-                } else {
-                    d3.select(d.country.line).classed("country--hoverselected", false);
-                    d3.select(d.country.line).classed("country--hover", false);
-                    d3.select(d.country.line).classed("country--selected", false);
-                    d3.select(d.country.line).style("stroke", "lightgray");
-                }
-
+                mouseOutGlobal(countryName);
+                //set tooltip out of bounds so we don't see it
                 focus.attr("transform", "translate(-100,-100)");
             }
 
 
-            function mouseclick(d) {
-                console.log(1);
-                console.log(d3.select("path"));
+            function mouseClickLine(d) {
                 var countryName = d.country.countryName;
-                if (countainsCountry(countryName))
-                {
-                    //country was no in array yet, so we select it
-                    removeSelectedCountry(countryName)
-                } else {
-                    //country was in array, so we remove it
-                    addSelectedCountry(countryName);
-                }
+                mouseClickGlobal(countryName);
             }
-
-        }
-        function removeSelectedCountry(countryName)
-        {
-            var index = selectedCountries.indexOf(countryName);
-            selectedCountries.splice(index, 1);
-            var country = findCountry(countryName);
-            //color the line
-            d3.select(country.line).classed("country--selected", false);
-            d3.select(country.line).style("stroke", "lightgray");
-            unsetColor(countryName);
-            drawBubbleChart(internetData);
         }
 
-        function addSelectedCountry(countryName)
-        {
-            selectedCountries.push(countryName);
-            var country = findCountry(countryName);
-            //color the line
-            d3.select(country.line).classed("country--selected", true);
-            d3.select(country.line).style("stroke", getAndSetAvailableColor(countryName));
-            d3.select(country.line).moveToFront();
-            console.log("add country");
-            console.log(countryColors);
-            drawBubbleChart(internetData);
-        }
 
-        function findCountry(countryName)
+
+        function findLineCountry(countryName)
         {
             //find the country in the line chart
-            var path = d3.select("g.cities").selectAll("path").filter(function(d) {
+            var path = d3.select("g.cities").selectAll("path").filter(function (d) {
                 if (d.countryName === countryName)
                 {
                     return d;
@@ -604,18 +525,6 @@
             return country;
         }
 
-        function findCountryElement(countryName)
-        {
-            //finds the country in the line chart
-            var path = d3.select("g.cities").selectAll("path").filter(function(d) {
-                if (d.countryName === countryName)
-                {
-                    return d;
-                }
-            })[0][0];
-            var country = path.__data__;
-            return country;
-        }
 
         function countainsCountry(countryName)
         {
@@ -637,7 +546,7 @@
             };
             var neighbors = topojson.neighbors(land.geometries);
 //              console.log(neighbors)
-            var nodes = topojson.feature(worldData, land).features.map(function(d) {
+            var nodes = topojson.feature(worldData, land).features.map(function (d) {
                 exterior(d.geometry);
                 var centroid = path.centroid(d.geometry);
                 var countryName = getCountryNameFromId(land.geometries[d.id - 1].countryId);
@@ -656,23 +565,10 @@
                     dorling: dorling(d.geometry, newRadius)
                 };
             });
-//              console.log(nodes);
-            /*nodes.forEach(function(n) {
-             var countryName = getCountryNameFromId(n.countryId);
-             console.log(n.dorling.radius);
-             if(n.dorling.radius > 0) {
-             var newRadius = Math.sqrt(getConnectivity(countryName, currentYear));
-             if(newRadius < 0) {
-             newRadius = newRadius * -1;
-             }
-             n.dorling.radius = newRadius;
-             }
-             
-             console.log(n);
-             })*/
-            var links = d3.merge(neighbors.map(function(neighbors, i) {
+
+            var links = d3.merge(neighbors.map(function (neighbors, i) {
                 var source = nodes[i];
-                return neighbors.map(function(target) {
+                return neighbors.map(function (target) {
                     target = nodes[target];
                     return {source: source, target: target, distance: source.dorling.radius + target.dorling.radius};
                 });
@@ -680,47 +576,48 @@
             mergeNodes(nodes);
             var node = svgMap.selectAll("g")
                     .data(nodes)
-                    .attr("id", function(data) {
+                    .attr("id", function (data) {
                         return d.id;
                     })
                     .enter().insert("g", ".graticule")
-                    .attr("transform", function(d) {
+                    .attr("transform", function (d) {
                         return "translate(" + -d.x + "," + -d.y + ")";
                     })
                     .append("path")
                     .attr("class", "pathMap")
-                    .attr("transform", function(d) {
+                    .attr("transform", function (d) {
                         return "translate(" + d.x + "," + d.y + ")";
                     })
-                    .attr("d", function(d) {
+                    .attr("d", function (d) {
                         return path(d.geometry);
                     })
-                    .attr("name", function(d) {
+                    .attr("name", function (d) {
                         return getCountryNameFromId(d.countryId);
                     })
-                    .on('mouseover', function(d) {
-                        mouseOverGlobal(d, getCountryNameFromId(d.countryId));
+                    .on('mouseover', function (d) {
+                        mouseOverGlobal(getCountryNameFromId(d.countryId));
                     })
-                    .on('mouseout', function(d) {
-                        mouseOutGlobal(d, getCountryNameFromId(d.countryId));
+                    .on('mouseout', function (d) {
+                        mouseOutGlobal(getCountryNameFromId(d.countryId));
                     })
-                    .on('click', function(d, i) {
-                        toggleCountry(d, getCountryNameFromId(d.countryId));
+                    .on('click', function (d) {
+                        mouseClickGlobal(getCountryNameFromId(d.countryId));
                     })
-                    .style("fill", function(d, i) {
-                        return color(d.color = d3.max(neighbors[i], function(n) {
+                    .style("fill", function (d, i) {
+                        //todo: Make dependent on growth
+                        return color(d.color = d3.max(neighbors[i], function (n) {
                             return nodes[n].color;
                         }) + 1 | 0);
                     })
-                    .style("opacity", function(d) {
+                    .style("opacity", function (d) {
                         return d.opacity;
                     });
-            force.on("tick", function(e) {
+            force.on("tick", function (e) {
                 var q = d3.geom.quadtree(nodes),
                         i = 0,
                         n = nodes.length;
                 var k = .5 * e.alpha;
-                nodes.forEach(function(o, i) {
+                nodes.forEach(function (o, i) {
                     o.y -= k * (o.y - o.oy);
                     o.x -= k * (o.x - o.ox);
                 });
@@ -728,18 +625,18 @@
                     q.visit(collide(nodes[i]));
                 }
 
-                node.attr("transform", function(d) {
+                node.attr("transform", function (d) {
                     //console.log(d);
                     return "translate(" + d.x + "," + d.y + ")";
                 });
             });
-            setTimeout(function() {
+            setTimeout(function () {
                 force
                         .gravity(0)
                         .charge(0)
                         .nodes(nodes)
                         .links(links)
-                        .linkDistance(function(d) {
+                        .linkDistance(function (d) {
                             return d.distance;
                         })
                         .start();
@@ -754,19 +651,138 @@
                     node.transition()
                             .duration(3000)
                             .attr("d", isDorling
-                                    ? function(d) {
+                                    ? function (d) {
                                         return "M" + d.dorling.coordinates.join("L") + "Z";
                                     }
-                            : function(d) {
+                            : function (d) {
                                 return path(d.geometry);
                             })
-                            .each("end", function(d) {
+                            .each("end", function (d) {
 
                                 d = d.dorling;
                                 d3.select(this).attr("d", pathCircle(d.centroid[0], d.centroid[1], d.radius));
                             });
                 }
             }, 1);
+        }
+
+        function getCountryNameFromId(countryId) {
+            for (var x = 0; x < countryNames.length; x++) {
+                if (countryNames[x].id == countryId) {
+                    return countryNames[x].name;
+                }
+            }
+            return "No Name";
+        }
+
+        function mouseClickGlobal(countryName) {
+            console.log("Clicked " + countryName);
+            var lineCountry = findLineCountry(countryName);
+            var worldCountry = findMapCountry(countryName);
+            if (countainsCountry(countryName))
+            {
+                //was contained
+
+                selectedCountries.splice(selectedCountries.indexOf(countryName), 1);
+                d3.select(lineCountry.line).classed("country--active", false);
+                d3.select(lineCountry.line).style("stroke", "lightgray");
+                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '1px', 'stroke': "black"});
+                unsetColor(countryName);
+
+            }
+            else
+            {
+                var color = getAndSetAvailableColor(countryName);
+
+                //was not contained yet
+                selectedCountries.push(countryName);
+                d3.select(lineCountry.line).classed("country--selected", true);
+                d3.select(lineCountry.line).style("stroke", color);
+                d3.select(lineCountry.line).moveToFront();
+                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': color});
+            }
+            //toggling for bubble chart
+            drawBubbleChart(internetData);
+        }
+
+        function mouseOverGlobal(countryName) {
+            console.log("Hovering " + countryName);
+            var lineCountry = findLineCountry(countryName);
+            var worldCountry = findMapCountry(countryName);
+            if (countainsCountry(countryName))
+            {
+                //country was selected, update borders to black
+                d3.select(lineCountry.line).style("stroke", "black");
+                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '6px', 'stroke': "black"});
+            } else {
+                d3.select(lineCountry.line).classed("country--active", true);
+                d3.select(lineCountry.line).style("stroke", "red");
+                d3.select(lineCountry.line).moveToFront();
+                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': "red"});
+            }
+
+            //TODO Update bubble
+        }
+
+        function mouseOutGlobal(countryName) {
+            console.log("Left  " + countryName);
+            var lineCountry = findLineCountry(countryName);
+            var worldCountry = findMapCountry(countryName);
+            if (countainsCountry(countryName))
+            {
+                d3.select(lineCountry.line).classed("country--active", true);
+                d3.select(lineCountry.line).style("stroke", getCountryColor(countryName));
+                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': getCountryColor(countryName)});
+
+            } else {
+                d3.select(lineCountry.line).classed("country--active", false);
+                d3.select(lineCountry.line).style("stroke", "lightgray");
+                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '1px', 'stroke': "black"});
+            }
+            //todo update bubble
+        }
+
+        function findMapCountry(countryName) {
+            //find the country in the map
+            var path = d3.select("#map").select("svg").selectAll("g").select("path").filter(function (d) {
+                if (getCountryNameFromId(this.__data__.countryId) === countryName)
+                {
+                    return this;
+                }
+            });
+            return path;
+        }
+
+
+
+        function yearSelect() {
+            var x = document.getElementById("yearSelect").value;
+            currentYear = x;
+            resetWorldMap();
+            initializeWorldMap(worldData);
+        }
+
+        function resetWorldMap() {
+            isDorling = false;
+            widthMap = document.getElementById("leftColumn").offsetWidth;
+            heightMap = document.getElementById("leftColumn").offsetWidth / 1020 * 600;
+            projection = d3.geo.mollweide()
+                    .scale(180)
+                    .translate([widthMap / 2, heightMap / 2]);
+            path = d3.geo.path()
+                    .projection(projection);
+            force = d3.layout.force()
+                    .size([widthMap, heightMap]);
+            graticule = d3.geo.graticule();
+            document.getElementById('map').innerHTML = "";
+            svgMap = d3.select("#map").append("svg")
+                    .attr("width", widthMap)
+                    .attr("height", heightMap + 50);
+            svgMap.append("path")
+                    .attr("class", "pathMap")
+                    .datum({type: "Sphere"})
+                    .attr("class", "background")
+                    .attr("d", path);
         }
 
         function exterior(d) {
@@ -784,7 +800,7 @@
         function projectRing(coordinates) {
             var ring = [];
             d3.geo.stream({type: "Polygon", coordinates: [coordinates]}, projection.stream({
-                point: function(x, y) {
+                point: function (x, y) {
                     ring.push([x, y]);
                 },
                 lineStart: noop,
@@ -811,7 +827,7 @@
                 //console.log("---------");
                 var currentBiggest = null;
                 var smallerElements = [];
-                regions.forEach(function(r) {
+                regions.forEach(function (r) {
                     if (!currentBiggest) {
                         currentBiggest = r;
                     }
@@ -904,8 +920,8 @@
 
         function polygons(geometries) {
             var id = 0;
-            return d3.merge(geometries.map(function(geometry) {
-                return (geometry.type === "MultiPolygon" ? geometry.arcs : [geometry.arcs]).map(function(d) {
+            return d3.merge(geometries.map(function (geometry) {
+                return (geometry.type === "MultiPolygon" ? geometry.arcs : [geometry.arcs]).map(function (d) {
                     return {id: ++id, type: "Polygon", arcs: d, parent: geometry, countryId: geometry.id};
                 });
             }));
@@ -918,7 +934,7 @@
                     nx2 = node.x + r,
                     ny1 = node.y - r,
                     ny2 = node.y + r;
-            return function(quad, x1, y1, x2, y2) {
+            return function (quad, x1, y1, x2, y2) {
                 if (quad.point && (quad.point !== node)) {
                     var x = node.x - quad.point.x,
                             y = node.y - quad.point.y,
@@ -951,7 +967,7 @@
 
         function getConnectivity(country, year) {
             var returnValue = "invalid";
-            internetData.forEach(function(c) {
+            internetData.forEach(function (c) {
                 //console.log(c.countryName);
                 if (c.countryName == country) {
                     //console.log(c);
@@ -972,131 +988,6 @@
             else {
                 return returnValue;
             }
-        }
-
-        function getCountryNameFromId(countryId) {
-            for (var x = 0; x < countryNames.length; x++) {
-                if (countryNames[x].id == countryId) {
-                    return countryNames[x].name;
-                }
-            }
-            return "No Name";
-        }
-
-
-        function changeAllRadius(year) {
-
-        }
-
-        function getCountryColor(countryName) {
-            var path = d3.select("#map").select("svg").selectAll("g").select("path").filter(function(d) {
-                //console.log(d);
-                if (getCountryNameFromId(d.countryId) === countryName) {
-                    this.color = d.color;
-                    return this;
-
-                }
-            });
-            return path[0][0].color;
-        }
-
-        function toggleCountry(d, countryName) {
-            //TODO Set color scheme: need variable that maps countries to specific color
-            //toggling for line chart
-            var color = getAndSetAvailableColor(countryName);
-            console.log("adding selected country");
-            console.log(color);
-            console.log(countryColors);
-
-            if (selectedCountries.indexOf(countryName) >= 0) {
-                selectedCountries.splice(selectedCountries.indexOf(countryName), 1);
-                d3.select(findCountry(countryName).line).classed("country--hover", false);
-                d3.select(findCountry(countryName).line).classed("country--selected", false);
-                d3.select(d.country.line).style("stroke", getAvailableColor());
-            }
-            else {
-                selectedCountries.push(countryName);
-                d3.select(findCountry(countryName).line).classed("country--selected", true);
-                d3.select(findCountry(countryName).line).style("stroke", color(getCountryColor(countryName)));
-                d3.select(findCountryElement(countryName).line).moveToFront();
-            }
-            //toggling for bubble chart
-            drawBubbleChart(internetData);
-            //TODO toggling for map
-            //adds an outline to the circle, should not change the mechanics of force layout
-            //.style({'stroke-opacity':1,'stroke-width':'4px','stroke':'#FF0000'});;
-
-            console.log(selectedCountries);
-        }
-
-        function mouseOverGlobal(d, countryName) {
-            //Toggle for line graph
-            //if(findCountry(countryName)){
-            console.log("Hovering " + countryName + findCountry(countryName));
-            d3.select(findCountry(countryName).line).classed("country--hover", true);
-            //toggle for country
-            var path = findCountryMap(d.countryId);
-            console.log(path);
-            //give the country on the map an outline
-            path.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': '#FF0000'});
-            d3.select(findCountryElement(countryName).line).moveToFront();
-        }
-
-        var globalId;//used for ugly hack
-        function findCountryMap(countryId) {
-            //find the country in the map
-            globalId = countryId;//ugly hack
-            var path = d3.select("#map").select("svg").selectAll("g").select("path").filter(function(d) {
-                var blub = 0;
-                if ((this.__data__.countryId === globalId))
-                {
-                    console.log(this.__data__.countryId);
-                    return this;
-                }
-            });
-            return path;
-        }
-
-        function mouseOutGlobal(d, countryName) {
-            //toggle for line graph
-            //if(countainsCountry(countryName)){
-
-            //console.log("Hovering " + countryName + findCountry(countryName));
-            d3.select(findCountry(countryName).line).classed("country--hover", false);
-            var path = findCountryMap(d.countryId);
-            path.style({'stroke-opacity': 1, 'stroke-width': '1px', 'stroke': '#000000'});
-            //        }
-        }
-
-
-        function yearSelect() {
-            var x = document.getElementById("yearSelect").value;
-            currentYear = x;
-            resetWorldMap();
-            initializeWorldMap(worldData);
-        }
-
-        function resetWorldMap() {
-            isDorling = false;
-            widthMap = document.getElementById("leftColumn").offsetWidth;
-            heightMap = document.getElementById("leftColumn").offsetWidth / 1020 * 600;
-            projection = d3.geo.mollweide()
-                    .scale(180)
-                    .translate([widthMap / 2, heightMap / 2]);
-            path = d3.geo.path()
-                    .projection(projection);
-            force = d3.layout.force()
-                    .size([widthMap, heightMap]);
-            graticule = d3.geo.graticule();
-            document.getElementById('map').innerHTML = "";
-            svgMap = d3.select("#map").append("svg")
-                    .attr("width", widthMap)
-                    .attr("height", heightMap + 50);
-            svgMap.append("path")
-                    .attr("class", "pathMap")
-                    .datum({type: "Sphere"})
-                    .attr("class", "background")
-                    .attr("d", path);
         }
 
     </script>
