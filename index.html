@@ -66,12 +66,10 @@
 
 
     .country--hover {
-        stroke: #FF0000;
         stroke-width: 1.75px;
         z-index: 10;
     }
     .country--selected {
-        stroke: #00FF00;
         stroke-width: 1.75px;
         z-index: 10;
     }
@@ -184,24 +182,53 @@
         var formatxAxis = d3.format('04d');
         //array which holds which countries are selected
         var selectedCountries = [];
+        //array which holds which country has which color	
+        var countryColors = [{
+                countryName: null,
+                color: "#377eb8"
+            },{
+                countryName: null,
+                color: "#984ea3"
+            }, {
+                countryName: null,
+                color: "#ff7f00"
+            }, {
+                countryName: null,
+                color: "#ffff33"
+            }, {
+                countryName: null,
+                color: "#a65628"
+            }, {
+                countryName: null,
+                color: "#f781bf"
+            }];
+
+
+
+
+
+
+
+
+
         var x = d3.scale.linear()
                 .range([0, widthLine]);
         var y = d3.scale.linear()
                 .range([heightLine, 0]);
         var color = d3.scale.category20();
         var voronoi = d3.geom.voronoi()
-                .x(function (d) {
+                .x(function(d) {
                     return x(d.year);
                 })
-                .y(function (d) {
+                .y(function(d) {
                     return y(d.value);
                 })
                 .clipExtent([[-margin.left, -margin.top], [widthLine + margin.right, heightLine + margin.bottom]]);
         var line = d3.svg.line()
-                .x(function (d) {
+                .x(function(d) {
                     return x(d.year);
                 })
-                .y(function (d) {
+                .y(function(d) {
                     return y(d.value);
                 });
         var svg = d3.select("#lineGraph").append("svg")
@@ -209,13 +236,14 @@
                 .attr("height", heightLine + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
         function type(d, i) {
             years = Object.keys(d).filter(Number);
             var country = {
                 countryName: d.countryName,
                 values: null
             };
-            country.values = years.map(function (y) {
+            country.values = years.map(function(y) {
                 return {
                     country: country,
                     year: y,
@@ -227,14 +255,72 @@
             return country;
         }
 
+
+
         //Max Code /\
         var svgBubble = dimple.newSvg("#bubbleChart", document.getElementById("rightColumnDown").offsetWidth, document.getElementById("rightColumnUp").offsetWidth * 400 / 590);
 
         d3.selection.prototype.moveToFront = function() {
-          return this.each(function(){
-          this.parentNode.appendChild(this);
-          });
+            return this.each(function() {
+                this.parentNode.appendChild(this);
+            });
         };
+
+        function getAndSetAvailableColor(name)
+        {
+            //some returns as soon as something returns true
+            for (var i = 0; i < countryColors.length; i++)
+            {
+                var cc = countryColors[i];
+                if (cc.countryName == null)
+                {
+                    cc.countryName = name;
+                    return cc.color;
+                }
+            }
+            return false;
+        }
+
+        function unsetColor(name)
+        {
+            //some returns as soon as something returns true
+            for (var i = 0; i < countryColors.length; i++)
+            {
+                var cc = countryColors[i];
+                if (cc.countryName == name)
+                {
+                    cc.countryName = null;
+                }
+            }
+        }
+
+        function getAvailableColor()
+        {
+            //some returns as soon as something returns true
+            for (var i = 0; i < countryColors.length; i++)
+            {
+                var cc = countryColors[i];
+                if (cc.countryName == null)
+                {
+                    return cc.color;
+                }
+            }
+            return false;
+        }
+        function getCountryColor(name)
+        {
+            //some returns as soon as something returns true
+            for (var i = 0; i < countryColors.length; i++)
+            {
+                var cc = countryColors[i];
+                if (cc.countryName == name)
+                {
+                    return cc.color;
+                }
+            }
+            return false;
+        }
+
         //Rik Code \/
         var isDorling = false;
         var widthMap = document.getElementById("leftColumn").offsetWidth,
@@ -289,7 +375,7 @@
             myChart.addLegend(140, 10, 360, 20, "right");
             //myChart.draw();
             myChart.data.forEach(function(d) {
-              myChart.assignColor(d.Country, d.Color);
+                myChart.assignColor(d.Country, getCountryColor(d.Country));
             });
             myChart.draw();
         }
@@ -297,7 +383,7 @@
         function extractData(internetData) {
             //console.log(internetData);
             data = [];
-            internetData.forEach(function (c) {
+            internetData.forEach(function(c) {
                 if (selectedCountries.indexOf(c.countryName) >= 0) {
                     for (var i = 1990.0; i < 2013.0; i++) {
                         var obj = {};
@@ -324,7 +410,7 @@
                         console.log(color(getCountryColor(c.countryName)));
                         data.push(obj);
                     }
-                   
+
 
 
                 }
@@ -336,8 +422,8 @@
 
         function initializeLineGraph(worldData) {
             x.domain(d3.extent(years));
-            y.domain([0, d3.max(worldData, function (c) {
-                    return d3.max(c.values, function (d) {
+            y.domain([0, d3.max(worldData, function(c) {
+                    return d3.max(c.values, function(d) {
                         return d.value;
                     });
                 })]).nice();
@@ -368,7 +454,7 @@
                     .data(worldData)
                     .enter().append("path")
                     .attr("class", "pathVoronoi")
-                    .attr("d", function (d) {
+                    .attr("d", function(d) {
                         d.line = this;
                         return line(d.values);
                     });
@@ -390,36 +476,36 @@
             voronoiGroup.selectAll("path")
                     .attr("class", "pathVoronoi")
                     .data(voronoi(d3.nest()
-                            .key(function (d) {
+                            .key(function(d) {
                                 return x(d.year) + "," + y(d.value);
                             })
-                            .rollup(function (v) {
+                            .rollup(function(v) {
                                 return v[0];
                             })
-                            .entries(d3.merge(worldData.map(function (d) {
+                            .entries(d3.merge(worldData.map(function(d) {
                                 return d.values;
                             })))
-                            .map(function (d) {
+                            .map(function(d) {
                                 return d.values;
                             })))
                     .enter().append("path")
                     .attr("class", "pathVoronoi")
-                    .attr("d", function (d) {
+                    .attr("d", function(d) {
                         if (d !== undefined)
                         {
                             return "M" + d.join("L") + "Z";
                         }
                     })
-                    .datum(function (d) {
+                    .datum(function(d) {
                         if (d !== undefined)
                         {
                             return d.point;
                         }
                     })
-                    .on("mouseover", mouseover)
+                    .on("mouseover", mouseOver)
                     .on("mouseout", mouseout)
                     .on("mousedown", mouseclick);
-            function mouseover(d) {
+            function mouseOver(d) {
 
                 var countryName = d.country.countryName;
                 if (countainsCountry(countryName))
@@ -428,10 +514,12 @@
                     d3.select(d.country.line).classed("country--hoverselected", true);
                     d3.select(d.country.line).classed("country--hover", false);
                     d3.select(d.country.line).classed("country--selected", false);
+                    //is already to the front, so no need to move
                 } else {
                     d3.select(d.country.line).classed("country--hoverselected", false);
                     d3.select(d.country.line).classed("country--hover", true);
                     d3.select(d.country.line).classed("country--selected", false);
+                    d3.select(d.country.line).style("stroke", getAvailableColor());
                     d3.select(d.country.line).moveToFront();
                 }
 
@@ -446,16 +534,17 @@
                 d3.select(d.country.line).classed("country--hover", false);
                 if (countainsCountry(countryName))
                 {
-                    //TODO Set the colors differently
-                    //reset color
                     d3.select(d.country.line).classed("country--hoverselected", false);
                     d3.select(d.country.line).classed("country--hover", false);
                     d3.select(d.country.line).classed("country--selected", true);
+                    d3.select(d.country.line).style("stroke", getCountryColor(countryName));
+
+
                 } else {
-                    //TODO Set the colors differently
                     d3.select(d.country.line).classed("country--hoverselected", false);
                     d3.select(d.country.line).classed("country--hover", false);
                     d3.select(d.country.line).classed("country--selected", false);
+                    d3.select(d.country.line).style("stroke", "lightgray");
                 }
 
                 focus.attr("transform", "translate(-100,-100)");
@@ -469,14 +558,10 @@
                 if (countainsCountry(countryName))
                 {
                     //country was no in array yet, so we select it
-                    console.log("not contained");
                     removeSelectedCountry(countryName)
-
                 } else {
                     //country was in array, so we remove it
-                    console.log("Contained");
                     addSelectedCountry(countryName);
-                    d3.select(findCountryElement(countryName)).moveToFront();
                 }
             }
 
@@ -488,6 +573,8 @@
             var country = findCountry(countryName);
             //color the line
             d3.select(country.line).classed("country--selected", false);
+            d3.select(country.line).style("stroke", "lightgray");
+            unsetColor(countryName);
             drawBubbleChart(internetData);
         }
 
@@ -497,13 +584,17 @@
             var country = findCountry(countryName);
             //color the line
             d3.select(country.line).classed("country--selected", true);
-            d3.select(findCountryElement(countryName)).moveToFront();
+            d3.select(country.line).style("stroke", getAndSetAvailableColor(countryName));
+            d3.select(country.line).moveToFront();
+            console.log("add country");
+            console.log(countryColors);
             drawBubbleChart(internetData);
         }
 
         function findCountry(countryName)
         {
-            var path = d3.select("g.cities").selectAll("path").filter(function (d) {
+            //find the country in the line chart
+            var path = d3.select("g.cities").selectAll("path").filter(function(d) {
                 if (d.countryName === countryName)
                 {
                     return d;
@@ -515,7 +606,8 @@
 
         function findCountryElement(countryName)
         {
-            var path = d3.select("g.cities").selectAll("path").filter(function (d) {
+            //finds the country in the line chart
+            var path = d3.select("g.cities").selectAll("path").filter(function(d) {
                 if (d.countryName === countryName)
                 {
                     return d;
@@ -545,7 +637,7 @@
             };
             var neighbors = topojson.neighbors(land.geometries);
 //              console.log(neighbors)
-            var nodes = topojson.feature(worldData, land).features.map(function (d) {
+            var nodes = topojson.feature(worldData, land).features.map(function(d) {
                 exterior(d.geometry);
                 var centroid = path.centroid(d.geometry);
                 var countryName = getCountryNameFromId(land.geometries[d.id - 1].countryId);
@@ -578,9 +670,9 @@
              
              console.log(n);
              })*/
-            var links = d3.merge(neighbors.map(function (neighbors, i) {
+            var links = d3.merge(neighbors.map(function(neighbors, i) {
                 var source = nodes[i];
-                return neighbors.map(function (target) {
+                return neighbors.map(function(target) {
                     target = nodes[target];
                     return {source: source, target: target, distance: source.dorling.radius + target.dorling.radius};
                 });
@@ -588,47 +680,47 @@
             mergeNodes(nodes);
             var node = svgMap.selectAll("g")
                     .data(nodes)
-                    .attr("id", function (data) {
+                    .attr("id", function(data) {
                         return d.id;
                     })
                     .enter().insert("g", ".graticule")
-                    .attr("transform", function (d) {
+                    .attr("transform", function(d) {
                         return "translate(" + -d.x + "," + -d.y + ")";
                     })
                     .append("path")
                     .attr("class", "pathMap")
-                    .attr("transform", function (d) {
+                    .attr("transform", function(d) {
                         return "translate(" + d.x + "," + d.y + ")";
                     })
-                    .attr("d", function (d) {
+                    .attr("d", function(d) {
                         return path(d.geometry);
                     })
-                    .attr("name", function (d) {
+                    .attr("name", function(d) {
                         return getCountryNameFromId(d.countryId);
                     })
-                    .on('mouseover', function (d) {
+                    .on('mouseover', function(d) {
                         mouseOverGlobal(d, getCountryNameFromId(d.countryId));
                     })
-                    .on('mouseout', function (d) {
+                    .on('mouseout', function(d) {
                         mouseOutGlobal(d, getCountryNameFromId(d.countryId));
                     })
-                    .on('click', function (d, i) {
+                    .on('click', function(d, i) {
                         toggleCountry(d, getCountryNameFromId(d.countryId));
                     })
-                    .style("fill", function (d, i) {
-                        return color(d.color = d3.max(neighbors[i], function (n) {
+                    .style("fill", function(d, i) {
+                        return color(d.color = d3.max(neighbors[i], function(n) {
                             return nodes[n].color;
                         }) + 1 | 0);
                     })
-                    .style("opacity", function (d) {
+                    .style("opacity", function(d) {
                         return d.opacity;
                     });
-            force.on("tick", function (e) {
+            force.on("tick", function(e) {
                 var q = d3.geom.quadtree(nodes),
                         i = 0,
                         n = nodes.length;
                 var k = .5 * e.alpha;
-                nodes.forEach(function (o, i) {
+                nodes.forEach(function(o, i) {
                     o.y -= k * (o.y - o.oy);
                     o.x -= k * (o.x - o.ox);
                 });
@@ -636,18 +728,18 @@
                     q.visit(collide(nodes[i]));
                 }
 
-                node.attr("transform", function (d) {
+                node.attr("transform", function(d) {
                     //console.log(d);
                     return "translate(" + d.x + "," + d.y + ")";
                 });
             });
-            setTimeout(function () {
+            setTimeout(function() {
                 force
                         .gravity(0)
                         .charge(0)
                         .nodes(nodes)
                         .links(links)
-                        .linkDistance(function (d) {
+                        .linkDistance(function(d) {
                             return d.distance;
                         })
                         .start();
@@ -662,13 +754,13 @@
                     node.transition()
                             .duration(3000)
                             .attr("d", isDorling
-                                    ? function (d) {
+                                    ? function(d) {
                                         return "M" + d.dorling.coordinates.join("L") + "Z";
                                     }
-                            : function (d) {
+                            : function(d) {
                                 return path(d.geometry);
                             })
-                            .each("end", function (d) {
+                            .each("end", function(d) {
 
                                 d = d.dorling;
                                 d3.select(this).attr("d", pathCircle(d.centroid[0], d.centroid[1], d.radius));
@@ -692,7 +784,7 @@
         function projectRing(coordinates) {
             var ring = [];
             d3.geo.stream({type: "Polygon", coordinates: [coordinates]}, projection.stream({
-                point: function (x, y) {
+                point: function(x, y) {
                     ring.push([x, y]);
                 },
                 lineStart: noop,
@@ -719,7 +811,7 @@
                 //console.log("---------");
                 var currentBiggest = null;
                 var smallerElements = [];
-                regions.forEach(function (r) {
+                regions.forEach(function(r) {
                     if (!currentBiggest) {
                         currentBiggest = r;
                     }
@@ -812,8 +904,8 @@
 
         function polygons(geometries) {
             var id = 0;
-            return d3.merge(geometries.map(function (geometry) {
-                return (geometry.type === "MultiPolygon" ? geometry.arcs : [geometry.arcs]).map(function (d) {
+            return d3.merge(geometries.map(function(geometry) {
+                return (geometry.type === "MultiPolygon" ? geometry.arcs : [geometry.arcs]).map(function(d) {
                     return {id: ++id, type: "Polygon", arcs: d, parent: geometry, countryId: geometry.id};
                 });
             }));
@@ -826,7 +918,7 @@
                     nx2 = node.x + r,
                     ny1 = node.y - r,
                     ny2 = node.y + r;
-            return function (quad, x1, y1, x2, y2) {
+            return function(quad, x1, y1, x2, y2) {
                 if (quad.point && (quad.point !== node)) {
                     var x = node.x - quad.point.x,
                             y = node.y - quad.point.y,
@@ -859,7 +951,7 @@
 
         function getConnectivity(country, year) {
             var returnValue = "invalid";
-            internetData.forEach(function (c) {
+            internetData.forEach(function(c) {
                 //console.log(c.countryName);
                 if (c.countryName == country) {
                     //console.log(c);
@@ -897,24 +989,30 @@
         }
 
         function getCountryColor(countryName) {
-          var path = d3.select("#map").select("svg").selectAll("g").select("path").filter(function (d) {
-            //console.log(d);
-            if(getCountryNameFromId(d.countryId) === countryName) {
-              this.color = d.color;
-              return this;
+            var path = d3.select("#map").select("svg").selectAll("g").select("path").filter(function(d) {
+                //console.log(d);
+                if (getCountryNameFromId(d.countryId) === countryName) {
+                    this.color = d.color;
+                    return this;
 
-            }
-          });
-          return path[0][0].color;
+                }
+            });
+            return path[0][0].color;
         }
 
         function toggleCountry(d, countryName) {
             //TODO Set color scheme: need variable that maps countries to specific color
             //toggling for line chart
+            var color = getAndSetAvailableColor(countryName);
+            console.log("adding selected country");
+            console.log(color);
+            console.log(countryColors);
+
             if (selectedCountries.indexOf(countryName) >= 0) {
                 selectedCountries.splice(selectedCountries.indexOf(countryName), 1);
                 d3.select(findCountry(countryName).line).classed("country--hover", false);
                 d3.select(findCountry(countryName).line).classed("country--selected", false);
+                d3.select(d.country.line).style("stroke", getAvailableColor());
             }
             else {
                 selectedCountries.push(countryName);
@@ -943,10 +1041,12 @@
             path.style({'stroke-opacity': 1, 'stroke-width': '4px', 'stroke': '#FF0000'});
             d3.select(findCountryElement(countryName).line).moveToFront();
         }
+
         var globalId;//used for ugly hack
         function findCountryMap(countryId) {
+            //find the country in the map
             globalId = countryId;//ugly hack
-            var path = d3.select("#map").select("svg").selectAll("g").select("path").filter(function (d) {
+            var path = d3.select("#map").select("svg").selectAll("g").select("path").filter(function(d) {
                 var blub = 0;
                 if ((this.__data__.countryId === globalId))
                 {
