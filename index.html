@@ -107,6 +107,35 @@
         background-color: #242424;
     }
 
+    .d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
 </style>
 <div id="leftColumn">
     <h1>Internet Connectivity in the world</h1>
@@ -154,6 +183,7 @@
     <script src="topojson.min.js?1.1.0"></script>
     <script src="d3.queue.js"></script>
     <script src="dimple.v2.1.2.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script>
         //Globals
         var countryNames;
@@ -306,6 +336,14 @@
             return false;
         }
 
+
+        var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return "<strong>CountryName:</strong> <span style='color:red'>"+ d.countryName +"</span><br /><strong>Connectivity in " + Math.round(currentYear) + ": </strong> " + Math.round(d.conn*1000)/10 + "%";
+  })
+
         //Rik Code \/
         var isDorling = false;
         var widthMap = document.getElementById("leftColumn").offsetWidth,
@@ -327,6 +365,7 @@
                 .datum({type: "Sphere"})
                 .attr("class", "background")
                 .attr("d", path);
+                svgMap.call(tip);
         queue()
                 .defer(d3.tsv, "internetAdaptedV2.csv", type)
                 .defer(d3.tsv, "world-country-names.tsv")
@@ -577,6 +616,7 @@
 
 
         function initializeWorldMap(worldData) {
+
             setLinearColorScale();
             var neighbors = topojson.neighbors(worldData.objects.countries.geometries);
             var land = {
@@ -634,9 +674,16 @@
                         return getCountryNameFromId(d.countryId);
                     })
                     .on('mouseover', function (d) {
+                      var countryName = getCountryNameFromId(d.countryId);
+                      var conn = getConnectivity(countryName, currentYear);
+                      d.countryName = countryName;
+                      d.conn = conn;
+                      console.log(d);
+                      tip.show(d);
                         mouseOverGlobal(getCountryNameFromId(d.countryId));
                     })
                     .on('mouseout', function (d) {
+                      tip.hide(d);
                         mouseOutGlobal(getCountryNameFromId(d.countryId));
                     })
                     .on('click', function (d) {
