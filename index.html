@@ -66,11 +66,7 @@
 
 
     .country--active {
-        <<<<<<< HEAD
         stroke-width: 3.75px;
-        =======
-        stroke-width: 2.75px;
-        >>>>>>> 425aa968deff741817e36ce94d4afe789492bb65
         z-index: 10;
     }
 
@@ -678,24 +674,15 @@
                         return getCountryNameFromId(d.countryId);
                     })
                     .on('mouseover', function (d) {
-                        << << << < HEAD
-                                var countryName = getCountryNameFromId(d.countryId);
-                        var conn = getConnectivity(countryName, currentYear);
-                        d.countryName = countryName;
-                        d.conn = conn;
-                        console.log(d);
-                                tip.show(d);
-                        === === =
-                                var countryName = getCountryNameFromId(d.countryId);
+                        var countryName = getCountryNameFromId(d.countryId);
                         var conn = getConnectivity(countryName, currentYear);
                         var growth = getGrowthInYear(countryName, currentYear);
                         d.countryName = countryName;
                         d.conn = conn;
                         d.growth = growth;
                         console.log(d);
-                                tip.show(d);
-                        >>> >>> > 425aa968deff741817e36ce94d4afe789492bb65
-                                mouseOverGlobal(getCountryNameFromId(d.countryId));
+                        tip.show(d);
+                        mouseOverGlobal(getCountryNameFromId(d.countryId));
                     })
                     .on('mouseout', function (d) {
                         tip.hide(d);
@@ -715,24 +702,24 @@
                     .style("opacity", function (d) {
                         return d.opacity;
                     });
-                    force.on("tick", function (e) {
-                        var q = d3.geom.quadtree(nodes),
-                                i = 0,
-                                n = nodes.length;
-                        var k = .5 * e.alpha;
-                        nodes.forEach(function (o, i) {
-                            o.y -= k * (o.y - o.oy);
-                            o.x -= k * (o.x - o.ox);
-                        });
-                        while (++i < n) {
-                            q.visit(collide(nodes[i]));
-                        }
+            force.on("tick", function (e) {
+                var q = d3.geom.quadtree(nodes),
+                        i = 0,
+                        n = nodes.length;
+                var k = .5 * e.alpha;
+                nodes.forEach(function (o, i) {
+                    o.y -= k * (o.y - o.oy);
+                    o.x -= k * (o.x - o.ox);
+                });
+                while (++i < n) {
+                    q.visit(collide(nodes[i]));
+                }
 
-                        node.attr("transform", function (d) {
-                            //console.log(d);
-                            return "translate(" + d.x + "," + d.y + ")";
-                        });
-                    });
+                node.attr("transform", function (d) {
+                    //console.log(d);
+                    return "translate(" + d.x + "," + d.y + ")";
+                });
+            });
             setTimeout(function () {
                 force
                         .gravity(0)
