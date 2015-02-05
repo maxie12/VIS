@@ -66,7 +66,11 @@
 
 
     .country--active {
+        <<<<<<< HEAD
         stroke-width: 3.75px;
+        =======
+        stroke-width: 2.75px;
+        >>>>>>> 425aa968deff741817e36ce94d4afe789492bb65
         z-index: 10;
     }
 
@@ -341,7 +345,7 @@
                 .attr('class', 'd3-tip')
                 .offset([-10, 0])
                 .html(function (d) {
-                    return "<strong>CountryName:</strong> <span style='color:red'>" + d.countryName + "</span><br /><strong>Connectivity in " + Math.round(currentYear) + ": </strong> " + Math.round(d.conn * 1000) / 10 + "%";
+                    return "<strong>CountryName:</strong> <span style='color:red'>" + d.countryName + "</span><br /><strong>Connectivity in " + Math.round(currentYear) + ": </strong> " + Math.round(d.conn * 1000) / 10 + "%<br />Growth in " + Math.round(currentYear) + ": " + Math.round(d.growth * 1000) / 10 + "%";
                 })
 
         //Rik Code \/
@@ -674,13 +678,24 @@
                         return getCountryNameFromId(d.countryId);
                     })
                     .on('mouseover', function (d) {
-                        var countryName = getCountryNameFromId(d.countryId);
+                        << << << < HEAD
+                                var countryName = getCountryNameFromId(d.countryId);
                         var conn = getConnectivity(countryName, currentYear);
                         d.countryName = countryName;
                         d.conn = conn;
                         console.log(d);
-                        tip.show(d);
-                        mouseOverGlobal(getCountryNameFromId(d.countryId));
+                                tip.show(d);
+                        === === =
+                                var countryName = getCountryNameFromId(d.countryId);
+                        var conn = getConnectivity(countryName, currentYear);
+                        var growth = getGrowthInYear(countryName, currentYear);
+                        d.countryName = countryName;
+                        d.conn = conn;
+                        d.growth = growth;
+                        console.log(d);
+                                tip.show(d);
+                        >>> >>> > 425aa968deff741817e36ce94d4afe789492bb65
+                                mouseOverGlobal(getCountryNameFromId(d.countryId));
                     })
                     .on('mouseout', function (d) {
                         tip.hide(d);
@@ -700,24 +715,24 @@
                     .style("opacity", function (d) {
                         return d.opacity;
                     });
-            force.on("tick", function (e) {
-                var q = d3.geom.quadtree(nodes),
-                        i = 0,
-                        n = nodes.length;
-                var k = .5 * e.alpha;
-                nodes.forEach(function (o, i) {
-                    o.y -= k * (o.y - o.oy);
-                    o.x -= k * (o.x - o.ox);
-                });
-                while (++i < n) {
-                    q.visit(collide(nodes[i]));
-                }
+                    force.on("tick", function (e) {
+                        var q = d3.geom.quadtree(nodes),
+                                i = 0,
+                                n = nodes.length;
+                        var k = .5 * e.alpha;
+                        nodes.forEach(function (o, i) {
+                            o.y -= k * (o.y - o.oy);
+                            o.x -= k * (o.x - o.ox);
+                        });
+                        while (++i < n) {
+                            q.visit(collide(nodes[i]));
+                        }
 
-                node.attr("transform", function (d) {
-                    //console.log(d);
-                    return "translate(" + d.x + "," + d.y + ")";
-                });
-            });
+                        node.attr("transform", function (d) {
+                            //console.log(d);
+                            return "translate(" + d.x + "," + d.y + ")";
+                        });
+                    });
             setTimeout(function () {
                 force
                         .gravity(0)
@@ -752,15 +767,15 @@
                             });
                 }
             }, 1);
-            
+
             //set outlines
             for (var i = 0; i < countryColors.length; i++)
             {
                 var countryName = countryColors[i].countryName;
-                if(countryName != null)
+                if (countryName != null)
                 {
-                var worldCountry = findMapCountry(countryName);
-                worldCountry.style({'stroke-opacity': 1, 'stroke-width': '3px', 'stroke': countryColors[i].color});
+                    var worldCountry = findMapCountry(countryName);
+                    worldCountry.style({'stroke-opacity': 1, 'stroke-width': '3px', 'stroke': countryColors[i].color});
                 }
             }
         }
