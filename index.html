@@ -577,6 +577,7 @@
 
 
         function initializeWorldMap(worldData) {
+            setLinearColorScale();
             var neighbors = topojson.neighbors(worldData.objects.countries.geometries);
             var land = {
                 type: "GeometryCollection",
@@ -642,10 +643,12 @@
                         mouseClickGlobal(getCountryNameFromId(d.countryId));
                     })
                     .style("fill", function (d, i) {
+                      //console.log(d);
+                      return colorInterpolator(linearColorScale(getGrowthInYear(getCountryNameFromId(d.countryId), currentYear)));
                         //todo: Make dependent on growth
-                        return color(d.color = d3.max(neighbors[i], function (n) {
-                            return nodes[n].color;
-                        }) + 1 | 0);
+                        //return color(d.color = d3.max(neighbors[i], function (n) {
+                        //    return nodes[n].color;
+                        //}) + 1 | 0);
                     })
                     .style("opacity", function (d) {
                         return d.opacity;
@@ -1039,6 +1042,28 @@
             else {
                 return returnValue;
             }
+        }
+
+        function getGrowthInYear(country, year) {
+                //console.log(c.countryName);
+                var thisYear = getConnectivity(country, year);
+                var previousYear = getConnectivity(country, year-1);
+                //console.log(thisYear-previousYear);
+                returnValue = thisYear - previousYear;
+            return returnValue;
+        }
+
+        function setLinearColorScale() {
+          var maxValue = 0;
+          internetData.forEach(function (c) {
+                //console.log(c.countryName);
+                var thisYear = getGrowthInYear(c.countryName, currentYear);
+                if(thisYear > maxValue) {
+                  maxValue = thisYear;
+                }
+            });
+
+          linearColorScale.domain([0.0, maxValue]);
         }
 
     </script>
