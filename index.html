@@ -338,11 +338,19 @@
 
 
         var tip = d3.tip()
-                .attr('class', 'd3-tip')
-                .offset([-10, 0])
-                .html(function (d) {
-                    return "<strong>CountryName:</strong> <span style='color:red'>" + d.countryName + "</span><br /><strong>Connectivity in " + Math.round(currentYear) + ": </strong> " + Math.round(d.conn * 1000) / 10 + "%<br />Growth in " + Math.round(currentYear) + ": " + Math.round(d.growth * 1000) / 10 + "%";
-                })
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return "<strong>CountryName:</strong> <span style='color:red'>"+ d.countryName +"</span><br /><strong>Connectivity in " + Math.round(currentYear) + ": </strong> " + Math.round(d.conn*1000)/10 + "%<br />Growth in " + Math.round(currentYear) + ": " + Math.round(d.growth*1000)/10 + "%";
+  });
+  var tipLine = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    console.log(d);
+    return "<strong>CountryName:</strong> <span style='color:red'>"+ d.country.countryName +"</span><br /><strong>Connectivity in " + Math.round(d.originalYear) + ": </strong> " + Math.round(Math.abs(d.value)*1000)/10 + "%";
+  });
+
 
         //Rik Code \/
         var isDorling = false;
@@ -365,7 +373,8 @@
                 .datum({type: "Sphere"})
                 .attr("class", "background")
                 .attr("d", path);
-        svgMap.call(tip);
+                svgMap.call(tip);
+                svg.call(tipLine);
         queue()
                 .defer(d3.tsv, "internetAdaptedV2.csv", type)
                 .defer(d3.tsv, "world-country-names.tsv")
@@ -578,8 +587,8 @@
                             return d.point;
                         }
                     })
-                    .on("mouseover", mouseOverLine)
-                    .on("mouseout", mouseOutLine)
+                    .on("mouseover", function(d) { tipLine.show(d); mouseOverLine(d); })
+                    .on("mouseout", function(d) { tipLine.hide(d); mouseOutLine(d); })
                     .on("mousedown", mouseClickLine);
 
             function mouseOverLine(d) {
