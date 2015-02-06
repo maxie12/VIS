@@ -445,13 +445,13 @@
                         if (d.key.indexOf(data[i].Country) > -1 && data[i].Year == d.cx)
                         {
                             connectivity = data[i].Connectivity;
-                            var newRadius = Math.sqrt(connectivity * 100);
+                            var newRadius = Math.sqrt(connectivity * 200);
                             if (newRadius < 0) {
                                 newRadius = newRadius * -1;
                             }
-                            if (newRadius < 3)
+                            if (newRadius < 4)
                             {
-                                newRadius = 3;
+                                newRadius = 4;
                             }
                             return newRadius;
                         }
