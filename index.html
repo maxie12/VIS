@@ -438,7 +438,27 @@
                     mouseOutGlobal(countryName, false);
                 }
             });
+            d3.select("#bubbleChart").select("svg").select("g").selectAll("circle").attr("r", function (d) {
+                var connectivity = 0;
+                for (var i = 0; i < data.length; i++)
+                {
+                        if (d.key.indexOf(data[i].Country) > -1 && data[i].Year == d.cx)
+                        {
+                            connectivity = data[i].Connectivity;
+                            var newRadius = Math.sqrt(connectivity * 100);
+                            if (newRadius < 0) {
+                                newRadius = newRadius * -1;
+                            }
+                            if (newRadius < 3)
+                            {
+                                newRadius = 3;
+                            }
+                            return newRadius;
+                        }
+                }
+            });
         }
+
 
         //extracts the data for the bubble chart
         function extractData(internetData) {
@@ -466,7 +486,7 @@
                             //console.log(connectivityThisYear - connectivityLastYear);
                             obj.Growth = connectivityThisYear - connectivityLastYear;
                         }
-                        obj.Connectivity = c[i];
+                        obj.Connectivity = parseFloat(getConnectivity(c.countryName, i + ".0"));
                         obj.Color = color(getCountryColor(c.countryName));
                         data.push(obj);
                     }//end of i loop
