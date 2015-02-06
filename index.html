@@ -355,7 +355,7 @@
         //Rik Code \/
         var isDorling = false;
         var widthMap = document.getElementById("leftColumn").offsetWidth,
-                heightMap = document.getElementById("leftColumn").offsetWidth / 1020 * 600;
+                heightMap = document.getElementById("leftColumn").offsetWidth / 1020 * 800;
         var projection = d3.geo.mollweide()
                 .scale(180)
                 .translate([widthMap / 2, heightMap / 2]);
@@ -446,6 +446,10 @@
                 } else {
                     mouseOutGlobal(countryName, false);
                 }
+            });
+            mySeries.shapes.on("click", function (e) {
+              var countryName = e.aggField[0];
+              mouseClickGlobal(countryName);
             });
             d3.select("#bubbleChart").select("svg").select("g").selectAll("circle").attr("r", function (d) {
                 var connectivity = 0;
@@ -597,9 +601,10 @@
 
                 //show tooltip
                 focus.attr("transform", "translate(" + x(d.year) + "," + y(d.value) + ")");
-                focus.select("text").html("country: " + countryName + "\r\n" +
-                        "Year " + d.originalYear.substring(0, 4) + "\r\n" +
-                        "internetConnectity: " + (Math.round(d.originalValue * 100) / 100) + "%");
+                focus.select("text").html("");
+                //focus.select("text").html("country: " + countryName + "\r\n" +
+                 //       "Year " + d.originalYear.substring(0, 4) + "\r\n" +
+                 //       "internetConnectity: " + (Math.round(d.originalValue * 100) / 100) + "%");
                 //TODO Get textBox to work so we display this properly
             }
             function mouseOutLine(d) {
@@ -752,7 +757,7 @@
             setTimeout(function () {
                 force
                         .gravity(0)
-                        .charge(0)
+                        .charge(-50)
                         .nodes(nodes)
                         .links(links)
                         .linkDistance(function (d) {
@@ -768,7 +773,7 @@
 
                     isDorling = !isDorling;
                     node.transition()
-                            .duration(3000)
+                            .duration(1000)
                             .attr("d", isDorling
                                     ? function (d) {
                                         return "M" + d.dorling.coordinates.join("L") + "Z";
@@ -835,8 +840,8 @@
         function mouseOverGlobal(countryName, redrawBubble) {
             //setFromBubble to false it is was not defined
             redrawBubble = (typeof redrawBubble !== 'undefined' ? redrawBubble : true);
-            if (hoverCountry == null)
-            {
+            //if (hoverCountry == null)
+            //{
                 console.log("Hovering " + countryName);
                 var lineCountry = findLineCountry(countryName);
                 var worldCountry = findMapCountry(countryName);
@@ -857,7 +862,7 @@
                 {
                     drawBubbleChart(internetData);
                 }
-            }
+            //}
 
         }
 
@@ -1043,13 +1048,14 @@
                 p0 = p1;
             }
             var area = polygon.area(),
-                    radius = Math.sqrt(newRadius) * 20,
+                    radius = Math.sqrt(newRadius) * 12,
                     //radius = Math.sqrt(Math.abs(area) / Math.PI),
                     centroid = polygon.centroid(-1 / (6 * area)),
                     angleOffset = Math.atan2(coordinates[0][1] - centroid[1], coordinates[0][0] - centroid[0]),
                     angle,
                     i = -1,
                     k = 2 * Math.PI / length;
+             //if(radius > 10) { radius = 10;}
             // Compute points along the circle’s circumference at equivalent distances.
             while (++i < n) {
                 angle = angleOffset + lengths[i] * k;
